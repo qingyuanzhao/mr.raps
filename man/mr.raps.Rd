@@ -109,9 +109,12 @@ attach(bmi.sbp)
 mr.raps.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
 
 ## Diagnostic plots
-res <- mr.raps(beta.exposure, beta.outcome, se.exposure, se.outcome, diagnosis = TRUE)
-res <- mr.raps(beta.exposure, beta.outcome, se.exposure, se.outcome, T, diagnosis = TRUE)
-res <- mr.raps(beta.exposure, beta.outcome, se.exposure, se.outcome, T, "tukey", diagnosis = TRUE)
+res <- mr.raps(beta.exposure, beta.outcome, se.exposure, se.outcome,
+diagnosis = TRUE)
+res <- mr.raps(beta.exposure, beta.outcome, se.exposure, se.outcome,
+TRUE, diagnosis = TRUE)
+res <- mr.raps(beta.exposure, beta.outcome, se.exposure, se.outcome,
+TRUE, "tukey", diagnosis = TRUE)
 
 detach(bmi.sbp)
 
