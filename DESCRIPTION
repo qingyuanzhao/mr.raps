@@ -9,6 +9,6 @@ Imports:
     stats,
     graphics,
     nortest
-License: GPL-2
+License: GPL-3
 RoxygenNote: 5.0.1
 LazyData: true
