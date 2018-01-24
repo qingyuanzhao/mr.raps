@@ -51,6 +51,15 @@
 #'
 #' detach(bmi.sbp)
 #'
+#' data(bmi.bmi)
+#' attach(bmi.bmi)
+#'
+#' ## Because both the exposure and the outcome are BMI, the true "causal" effect should be 1.
+#'
+#' ## All estimators
+#' mr.raps.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
+#'
+#' detach(bmi.bmi)
 #'
 mr.raps <- function(b_exp, b_out, se_exp, se_out,
                     over.dispersion = FALSE,

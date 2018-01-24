@@ -3,7 +3,7 @@
 \docType{data}
 \name{bmi.sbp}
 \alias{bmi.sbp}
-\title{Effect of Body Mass Index (BMI) on Systolic Blood Pressure}
+\title{Effect of Body Mass Index (BMI) on Systolic Blood Pressure (SBP)}
 \format{A data.frame.}
 \usage{
 data(bmi.sbp)
