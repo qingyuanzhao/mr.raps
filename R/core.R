@@ -278,7 +278,7 @@ mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization =
     I <- matrix(c(
         - sum(((b_exp^2 - se_exp^2) * (tau2.hat + se_out^2) + (b_out^2 - tau2.hat - se_out^2) * se_exp^2) / (tau2.hat + se_out^2 + se_exp^2 * beta.hat^2)^2),
         0,
-        - sum(se_exp^2 * beta.hat^2 / (tau2.hat + se_out^2 + se_exp^2 * beta.hat^2)^2),
+        - sum(se_exp^2 * beta.hat / (tau2.hat + se_out^2 + se_exp^2 * beta.hat^2)^2),
         - sum(se_exp^2/ (tau2.hat + se_out^2 + se_exp^2 * beta.hat^2)^2)), 2, 2)
 
     asymp.var <- solve(I) %*% score.var %*% t(solve(I))
@@ -529,7 +529,7 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
     I <- matrix(c(
         - delta * sum(((b_exp^2 - se_exp^2) * (tau2.hat + se_out^2) + (b_out^2 - tau2.hat - se_out^2) * se_exp^2) / (tau2.hat + se_out^2 + se_exp^2 * beta.hat^2)^2),
         0,
-        - delta * sum(se_exp^2 * beta.hat^2 / (tau2.hat + se_out^2 + se_exp^2 * beta.hat^2)^2),
+        - delta * sum(se_exp^2 * beta.hat / (tau2.hat + se_out^2 + se_exp^2 * beta.hat^2)^2),
         - (delta + c3) / 2 * sum(se_exp^2/ (tau2.hat + se_out^2 + se_exp^2 * beta.hat^2)^2)), 2, 2)
 
     asymp.var <- solve(I) %*% score.var %*% t(solve(I))
