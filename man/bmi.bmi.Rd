@@ -11,9 +11,9 @@ data(bmi.bmi)
 \description{
 Summary data obtained by combining three genome-wide association studies:
 \enumerate{
-\item{BMI-GIANT}{BMI in the Genetic Investigation of ANthropometric Traits (GIANT) consortium (sample size: 339224).}
-\item{BMI-UKBB-1}{BMI in a half of the United Kingdom BioBank (UKBB) data (sample size: 234070)}
-\item{SBP-UKBB-2}{BMI in the other half of the UKBB data (sample size: 234070)}
+\item{BMI-GIANT:}{ BMI in the Genetic Investigation of ANthropometric Traits (GIANT) consortium (sample size: 339224).}
+\item{BMI-UKBB-1:}{ BMI in a half of the United Kingdom BioBank (UKBB) data (sample size: 234070)}
+\item{SBP-UKBB-2:}{ BMI in the other half of the UKBB data (sample size: 234070)}
 }
 }
 \details{

@@ -1,10 +1,10 @@
 Package: mr.raps
 Type: Package
 Title: Two Sample Mendelian Randomization using Robust Adjusted Profile Score
-Version: 0.1
-Date: 2018-01-01
+Version: 0.2
+Date: 2018-01-29
 Authors@R: c(person("Qingyuan", "Zhao", email = "qingyzhao@gmail.com", role = c("aut", "cre")))
-Description: Mendelian randomization is a method of identifying and estimating a confounded causal effect using genetic instrumental variables. This packages implements methods for two sasmple Mendelian randomization with summary statistics by using Robust Adjusted Profile Score (RAPS).
+Description: Mendelian randomization is a method of identifying and estimating a confounded causal effect using genetic instrumental variables. This packages implements methods for two-sample Mendelian randomization with summary statistics by using Robust Adjusted Profile Score (RAPS). References: Qingyuan Zhao, Jingshu Wang, Jack Bowden, Dylan S. Small. Statistical inference in two-sample summary-data Mendelian randomization using robust adjusted profile score. <arXiv:1801.09652>.
 Imports:
     stats,
     graphics,

@@ -30,6 +30,8 @@
 #' \item{beta.se.bootstrap}{Median absolute deviation of the bootstrap estimates, returned if \code{se.method = "bootstrap"}}
 #' }
 #'
+#' @references Qingyuan Zhao, Jingshu Wang, Jack Bowden, Dylan S. Small. Statistical inference in two-sample summary-data Mendelian randomization using robust adjusted profile score. \url{https://arxiv.org/abs/1801.09652}.
+#'
 #' @import stats
 #' @export
 #'

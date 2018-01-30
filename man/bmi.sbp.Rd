@@ -11,9 +11,9 @@ data(bmi.sbp)
 \description{
 Summary data obtained by combining three genome-wide association studies:
 \enumerate{
-\item{BMI-FEM}{BMI in females by the Genetic Investigation of ANthropometric Traits (GIANT) consortium (sample size: 171977).}
-\item{BMI-MAL}{BMI in males in the same study by the GIANT consortium (sam- ple size: 152893)}
-\item{SBP-UKBB}{SBP using the United Kingdom BioBank (UKBB) data (sample size: 317754)}
+\item{BMI-FEM:}{ BMI in females by the Genetic Investigation of ANthropometric Traits (GIANT) consortium (sample size: 171977).}
+\item{BMI-MAL:}{ BMI in males in the same study by the GIANT consortium (sam- ple size: 152893)}
+\item{SBP-UKBB:}{ SBP using the United Kingdom BioBank (UKBB) data (sample size: 317754)}
 }
 }
 \details{

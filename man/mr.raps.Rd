@@ -130,3 +130,6 @@ mr.raps.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
 detach(bmi.bmi)
 
 }
+\references{
+Qingyuan Zhao, Jingshu Wang, Jack Bowden, Dylan S. Small. Statistical inference in two-sample summary-data Mendelian randomization using robust adjusted profile score. \url{https://arxiv.org/abs/1801.09652}.
+}
