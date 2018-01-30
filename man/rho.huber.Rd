@@ -10,4 +10,3 @@ rho.huber(r, k = 1.345, deriv = 0)
 Huber loss function and its derivatives
 }
 \keyword{internal}
-

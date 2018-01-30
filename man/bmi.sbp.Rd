@@ -20,4 +20,3 @@ Summary data obtained by combining three genome-wide association studies:
 The BMI-FEM dataset is used for SNP selection (column \code{pval.selection}). The BMI-MAL dataset estimates the SNPs' effect on BMI and the SBP-UKBB dataset estimates the SNPs' on SBP.
 }
 \keyword{datasets}
-

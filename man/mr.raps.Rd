@@ -3,10 +3,10 @@
 \name{mr.raps}
 \alias{mr.raps}
 \alias{mr.raps.all}
-\alias{mr.raps.overdispersed}
-\alias{mr.raps.overdispersed.robust}
 \alias{mr.raps.simple}
+\alias{mr.raps.overdispersed}
 \alias{mr.raps.simple.robust}
+\alias{mr.raps.overdispersed.robust}
 \title{Main function}
 \usage{
 mr.raps(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
@@ -100,6 +100,7 @@ A list
 
 \item \code{mr.raps.overdispersed.robust}: 
 }}
+
 \examples{
 
 data(bmi.sbp)
@@ -129,4 +130,3 @@ mr.raps.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
 detach(bmi.bmi)
 
 }
-

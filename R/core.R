@@ -574,41 +574,41 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
 
 }
 
-#' Modified weights IVW
-#'
-#' This function implements the modified 2nd order weighted procedure.
-#'
-#' @inheritParams mr.raps
-#'
-#' @references Bowden, Jack, M. Fabiola Del Greco, Cosetta Minelli, Debbie Lawlor, Nuala Sheehan, John Thompson, and George Davey Smith. "Improving the accuracy of two-sample summary data Mendelian randomization: moving beyond the NOME assumption." bioRxiv (2017): 159442.
-#'
-#' @return A list
-#' \describe{
-#' \item{beta.hat}{Estimated causal effect}
-#' \item{beta.se}{Standard error of \code{beta.hat}}
-#' }
-#'
-#' @export
-#'
-ivw.modified <- function(b_exp, b_out, se_exp, se_out) {
-    BIV = b_out/b_exp
-    W1 = 1/(se_out^2/b_exp^2)
-    BIVw1 = BIV*sqrt(W1)
-    sW1 = sqrt(W1)
+## #' Modified weights IVW
+## #'
+## #' This function implements the modified 2nd order weighted procedure.
+## #'
+## #' @inheritParams mr.raps
+## #'
+## #' @references Bowden, Jack, M. Fabiola Del Greco, Cosetta Minelli, Debbie Lawlor, Nuala Sheehan, John Thompson, and George Davey Smith. "Improving the accuracy of two-sample summary data Mendelian randomization: moving beyond the NOME assumption." bioRxiv (2017): 159442.
+## #'
+## #' @return A list
+## #' \describe{
+## #' \item{beta.hat}{Estimated causal effect}
+## #' \item{beta.se}{Standard error of \code{beta.hat}}
+## #' }
+## #'
+## #' @export
+## #'
+## ivw.modified <- function(b_exp, b_out, se_exp, se_out) {
+##     BIV = b_out/b_exp
+##     W1 = 1/(se_out^2/b_exp^2)
+##     BIVw1 = BIV*sqrt(W1)
+##     sW1 = sqrt(W1)
 
-    IVWfitR1 = summary(lm(BIVw1 ~ -1+sW1))
-    Bhat1 = IVWfitR1$coef[1]
-    DF = length(BIV)-1
+##     IVWfitR1 = summary(lm(BIVw1 ~ -1+sW1))
+##     Bhat1 = IVWfitR1$coef[1]
+##     DF = length(BIV)-1
 
-    W3 = 1/(se_out^2/b_exp^2 + (Bhat1^2)*se_exp^2/b_exp^2)
-    BIVw3 = BIV*sqrt(W3)
-    sW3 = sqrt(W3)
-    IVWfitR3 = summary(lm(BIVw3 ~ -1+sW3))
-    Bhat3 = IVWfitR3$coef[1]
-    phi_IVW3 = IVWfitR3$sigma^2
-    QIVW3 = DF*phi_IVW3 # Q statistic
-    Qp3 = 1-pchisq(QIVW3,DF) # p-value
-    Q3ind = W3*(BIV - Bhat3)^2 # individual Q contribution vector
+##     W3 = 1/(se_out^2/b_exp^2 + (Bhat1^2)*se_exp^2/b_exp^2)
+##     BIVw3 = BIV*sqrt(W3)
+##     sW3 = sqrt(W3)
+##     IVWfitR3 = summary(lm(BIVw3 ~ -1+sW3))
+##     Bhat3 = IVWfitR3$coef[1]
+##     phi_IVW3 = IVWfitR3$sigma^2
+##     QIVW3 = DF*phi_IVW3 # Q statistic
+##     Qp3 = 1-pchisq(QIVW3,DF) # p-value
+##     Q3ind = W3*(BIV - Bhat3)^2 # individual Q contribution vector
 
-    return(list(beta.hat = Bhat3, beta.se = IVWfitR3$coef[2]))
-}
+##     return(list(beta.hat = Bhat3, beta.se = IVWfitR3$coef[2]))
+## }
