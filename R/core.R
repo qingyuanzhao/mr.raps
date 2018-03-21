@@ -202,9 +202,19 @@ mr.raps.simple <- function(b_exp, b_out, se_exp, se_out, diagnosis = FALSE) {
 #' @importFrom nortest ad.test
 #' @export
 #'
-mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization = c("simple", "mode"), suppress.warning = FALSE, diagnosis = FALSE, niter = 20, tol = .Machine$double.eps^0.5) {
+mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization = c("simple", "mode"), suppress.warning = FALSE, diagnosis = FALSE, pruning = TRUE, niter = 20, tol = .Machine$double.eps^0.5) {
 
     initialization <- match.arg(initialization, c("simple", "mode"))
+    if (pruning) {
+        s <- se_exp > 10 * median(se_exp)
+        if (sum(s) > 0) {
+            print(paste("Pruning extraordinarily large se_exp:", which(s)))
+        }
+        b_exp <- b_exp[!s]
+        b_out <- b_out[!s]
+        se_exp <- se_exp[!s]
+        se_out <- se_out[!s]
+    }
 
     profile.loglike.fixbeta <- function(beta, tau2) {
         alpha.hat <- 0
@@ -455,13 +465,24 @@ mr.raps.simple.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = 
 #' @importFrom nortest ad.test
 #' @export
 #'
-mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = c("huber", "tukey"), k = switch(loss.function[1], huber = 1.345, tukey = 4.685), initialization = c("l2", "mode"), suppress.warning = FALSE, diagnosis = FALSE, niter = 20, tol = .Machine$double.eps^0.5) {
+mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = c("huber", "tukey"), k = switch(loss.function[1], huber = 1.345, tukey = 4.685), initialization = c("l2", "mode"), suppress.warning = FALSE, diagnosis = FALSE, pruning = TRUE, niter = 20, tol = .Machine$double.eps^0.5) {
 
     loss.function <- match.arg(loss.function, c("huber", "tukey"))
     initialization <- match.arg(initialization, c("l2", "mode"))
     rho <- switch(loss.function,
                   huber = function(r, ...) rho.huber(r, k, ...),
                   tukey = function(r, ...) rho.tukey(r, k, ...))
+
+    if (pruning) {
+        s <- se_exp > 10 * median(se_exp)
+        if (sum(s) > 0) {
+            print(paste("Pruning extraordinarily large se_exp:", which(s)))
+        }
+        b_exp <- b_exp[!s]
+        b_out <- b_out[!s]
+        se_exp <- se_exp[!s]
+        se_out <- se_out[!s]
+    }
 
     delta <- integrate(function(x) x * rho(x, deriv = 1) * dnorm(x), -Inf, Inf)$value
     c1 <- integrate(function(x) rho(x, deriv = 1)^2 * dnorm(x), -Inf, Inf)$value
@@ -484,7 +505,7 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
         ## beta.hat <- mode.estimator(b_exp, b_out, se_exp, se_out)
         ## tau2.hat <- 0
     } else {
-        fit <- mr.raps.overdispersed(b_exp, b_out, se_exp, se_out, suppress.warning = TRUE)
+        fit <- mr.raps.overdispersed(b_exp, b_out, se_exp, se_out, suppress.warning = TRUE, pruning = FALSE)
         beta.hat <- fit$beta.hat
         tau2.hat <- fit$tau2.hat
     }
