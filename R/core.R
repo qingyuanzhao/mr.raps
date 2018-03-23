@@ -141,7 +141,7 @@ mr.raps.simple <- function(b_exp, b_out, se_exp, se_out, diagnosis = FALSE) {
         - (1/2) * sum((b_out - b_exp * beta)^2 / (se_out^2 + se_exp^2 * beta^2)) # - (1/2) * sum(log(se_out^2 + beta^2 * se_exp^2))
     }
 
-    bound <- quantile(abs(b_out / b_exp), 0.95) * 2
+    bound <- quantile(abs(b_out / b_exp), 0.95, na.rm = TRUE) * 2
 
     beta.hat <- optimize(profile.loglike, bound * c(-1, 1), maximum = TRUE, tol = .Machine$double.eps^0.5)$maximum
     while (abs(beta.hat) > 0.95 * bound) {
@@ -226,7 +226,7 @@ mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization =
         - (1/2) * sum((b_out - alpha.hat - b_exp * beta)^2 / (tau2 + se_out^2 + se_exp^2 * beta^2))
     }
 
-    bound.beta <- quantile(abs(b_out / b_exp), 0.95) * 10
+    bound.beta <- quantile(abs(b_out / b_exp), 0.95, na.rm = TRUE) * 10
     bound.tau2 <- quantile(se_out^2, 0.95) * 10
 
     ## Initialization
@@ -399,7 +399,7 @@ mr.raps.simple.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = 
         - sum(rho((b_out - b_exp * beta) / sqrt(se_out^2 + se_exp^2 * beta^2)))
     }
 
-    bound <- quantile(abs(b_out / b_exp), 0.95) * 2
+    bound <- quantile(abs(b_out / b_exp), 0.95, na.rm = TRUE) * 2
 
     beta.hat <- optimize(robust.loglike, bound * c(-1, 1), maximum = TRUE, tol = .Machine$double.eps^0.5)$maximum
     while (abs(beta.hat) > 0.95 * bound) {
@@ -509,7 +509,7 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
         beta.hat <- fit$beta.hat
         tau2.hat <- fit$tau2.hat
     }
-    bound.beta <- quantile(abs(b_out / b_exp), 0.95) * 10
+    bound.beta <- quantile(abs(b_out / b_exp), 0.95, na.rm = TRUE) * 10
     bound.tau2 <- quantile(se_out^2, 0.95) * 10
 
     for (iter in 1:niter) {
