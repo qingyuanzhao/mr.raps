@@ -227,7 +227,7 @@ mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization =
     }
 
     bound.beta <- quantile(abs(b_out / b_exp), 0.95, na.rm = TRUE) * 10
-    bound.tau2 <- quantile(se_out^2, 0.95) * 10
+    bound.tau2 <- quantile(se_out^2, 0.95) * 100
 
     ## Initialization
     if (initialization == "mode") {
@@ -510,7 +510,7 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
         tau2.hat <- fit$tau2.hat
     }
     bound.beta <- quantile(abs(b_out / b_exp), 0.95, na.rm = TRUE) * 10
-    bound.tau2 <- quantile(se_out^2, 0.95) * 10
+    bound.tau2 <- quantile(se_out^2, 0.95) * 100
 
     for (iter in 1:niter) {
         beta.hat.old <- beta.hat
