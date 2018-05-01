@@ -4,7 +4,7 @@
 \name{bmi.bmi}
 \alias{bmi.bmi}
 \title{"Effect" of Body Mass Index (BMI) on Body Mass Index (BMI)}
-\format{A data.frame.}
+\format{A \code{data.frame} with 812 rows and 28 variables.}
 \usage{
 data(bmi.bmi)
 }
@@ -20,3 +20,4 @@ Summary data obtained by combining three genome-wide association studies:
 The BMI-GIANT dataset is used for SNP selection (column \code{pval.selection}). The BMI-UKBB-1 dataset estimates the SNPs' effects on BMI (columns \code{beta.exposure} and \code{se.exposure}) and the BMI-UKBB-2 dataset provides independent estimates of the same effects (columns \code{beta.outcome} and \code{se.outcome}).
 }
 \keyword{datasets}
+

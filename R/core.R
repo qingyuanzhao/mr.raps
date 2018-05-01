@@ -9,6 +9,7 @@
 #' @param over.dispersion Should the model consider overdispersion (systematic pleiotropy)? Default is FALSE.
 #' @param loss.function Either the squared error loss (\code{l2}) or robust loss functions/scores (\code{huber} or \code{tukey}).
 #' @param diagnosis Should the function returns diagnostic plots and results? Default is FALSE
+#' @param pruning Should the function remove unusually large \code{se_exp}?
 #' @param se.method How should the standard error be estimated? Either by sandwich variance formula (default and recommended) or the bootstrap.
 #' @param k Threshold parameter in the Huber and Tukey loss functions.
 #' @param B Number of bootstrap resamples
@@ -67,6 +68,7 @@ mr.raps <- function(b_exp, b_out, se_exp, se_out,
                     over.dispersion = FALSE,
                     loss.function = c("l2", "huber", "tukey"),
                     diagnosis = FALSE,
+                    pruning = TRUE,
                     se.method = c("sandwich", "bootstrap"),
                     k = switch(loss.function[1], l2 = NULL, huber = 1.345, tukey = 4.685),
                     B = 1000,
@@ -79,13 +81,13 @@ mr.raps <- function(b_exp, b_out, se_exp, se_out,
         if (!over.dispersion) {
             fit <- mr.raps.simple(b_exp, b_out, se_exp, se_out, diagnosis = diagnosis)
         } else {
-            fit <- mr.raps.overdispersed(b_exp, b_out, se_exp, se_out, diagnosis = diagnosis, suppress.warning = suppress.warning)
+            fit <- mr.raps.overdispersed(b_exp, b_out, se_exp, se_out, diagnosis = diagnosis, pruning = pruning, suppress.warning = suppress.warning)
         }
     } else {
         if (!over.dispersion) {
             fit <- mr.raps.simple.robust(b_exp, b_out, se_exp, se_out, loss.function, k, diagnosis = diagnosis)
         } else {
-            fit <- mr.raps.overdispersed.robust(b_exp, b_out, se_exp, se_out, loss.function, k, suppress.warning = suppress.warning, diagnosis = diagnosis)
+            fit <- mr.raps.overdispersed.robust(b_exp, b_out, se_exp, se_out, loss.function, k, suppress.warning = suppress.warning, diagnosis = diagnosis, pruning = pruning)
         }
     }
 

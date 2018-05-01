@@ -4,7 +4,7 @@
 \name{bmi.sbp}
 \alias{bmi.sbp}
 \title{Effect of Body Mass Index (BMI) on Systolic Blood Pressure (SBP)}
-\format{A data.frame.}
+\format{A \code{data.frame} with 160 rows and 29 variables.}
 \usage{
 data(bmi.sbp)
 }
@@ -20,3 +20,4 @@ Summary data obtained by combining three genome-wide association studies:
 The BMI-FEM dataset is used for SNP selection (column \code{pval.selection}). The BMI-MAL dataset estimates the SNPs' effect on BMI and the SBP-UKBB dataset estimates the SNPs' on SBP.
 }
 \keyword{datasets}
+

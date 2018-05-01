@@ -3,16 +3,17 @@
 \name{mr.raps}
 \alias{mr.raps}
 \alias{mr.raps.all}
-\alias{mr.raps.simple}
 \alias{mr.raps.overdispersed}
-\alias{mr.raps.simple.robust}
 \alias{mr.raps.overdispersed.robust}
+\alias{mr.raps.simple}
+\alias{mr.raps.simple.robust}
 \title{Main function}
 \usage{
 mr.raps(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
   loss.function = c("l2", "huber", "tukey"), diagnosis = FALSE,
-  se.method = c("sandwich", "bootstrap"), k = switch(loss.function[1], l2 =
-  NULL, huber = 1.345, tukey = 4.685), B = 1000, suppress.warning = FALSE)
+  pruning = TRUE, se.method = c("sandwich", "bootstrap"),
+  k = switch(loss.function[1], l2 = NULL, huber = 1.345, tukey = 4.685),
+  B = 1000, suppress.warning = FALSE)
 
 mr.raps.all(b_exp, b_out, se_exp, se_out)
 
@@ -20,7 +21,8 @@ mr.raps.simple(b_exp, b_out, se_exp, se_out, diagnosis = FALSE)
 
 mr.raps.overdispersed(b_exp, b_out, se_exp, se_out,
   initialization = c("simple", "mode"), suppress.warning = FALSE,
-  diagnosis = FALSE, niter = 20, tol = .Machine$double.eps^0.5)
+  diagnosis = FALSE, pruning = TRUE, niter = 20,
+  tol = .Machine$double.eps^0.5)
 
 mr.raps.simple.robust(b_exp, b_out, se_exp, se_out, loss.function = c("huber",
   "tukey"), k = switch(loss.function[1], huber = 1.345, tukey = 4.685),
@@ -29,8 +31,8 @@ mr.raps.simple.robust(b_exp, b_out, se_exp, se_out, loss.function = c("huber",
 mr.raps.overdispersed.robust(b_exp, b_out, se_exp, se_out,
   loss.function = c("huber", "tukey"), k = switch(loss.function[1], huber =
   1.345, tukey = 4.685), initialization = c("l2", "mode"),
-  suppress.warning = FALSE, diagnosis = FALSE, niter = 20,
-  tol = .Machine$double.eps^0.5)
+  suppress.warning = FALSE, diagnosis = FALSE, pruning = TRUE,
+  niter = 20, tol = .Machine$double.eps^0.5)
 }
 \arguments{
 \item{b_exp}{A vector of SNP effects on the exposure variable, usually obtained from a GWAS.}
@@ -46,6 +48,8 @@ mr.raps.overdispersed.robust(b_exp, b_out, se_exp, se_out,
 \item{loss.function}{Either the squared error loss (\code{l2}) or robust loss functions/scores (\code{huber} or \code{tukey}).}
 
 \item{diagnosis}{Should the function returns diagnostic plots and results? Default is FALSE}
+
+\item{pruning}{Should the function remove unusually large \code{se_exp}?}
 
 \item{se.method}{How should the standard error be estimated? Either by sandwich variance formula (default and recommended) or the bootstrap.}
 
@@ -100,7 +104,6 @@ A list
 
 \item \code{mr.raps.overdispersed.robust}: 
 }}
-
 \examples{
 
 data(bmi.sbp)
@@ -133,3 +136,4 @@ detach(bmi.bmi)
 \references{
 Qingyuan Zhao, Jingshu Wang, Jack Bowden, Dylan S. Small. Statistical inference in two-sample summary-data Mendelian randomization using robust adjusted profile score. \url{https://arxiv.org/abs/1801.09652}.
 }
+

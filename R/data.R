@@ -13,7 +13,7 @@
 #'
 #' @usage data(bmi.sbp)
 #'
-#' @format A data.frame.
+#' @format A \code{data.frame} with 160 rows and 29 variables.
 #'
 #' @keywords datasets
 #'
@@ -35,9 +35,39 @@
 #'
 #' @usage data(bmi.bmi)
 #'
-#' @format A data.frame.
+#' @format A \code{data.frame} with 812 rows and 28 variables.
 #'
 #' @keywords datasets
 #'
 #'
 "bmi.bmi"
+
+#' Effect of blood lipids (LDL cholesterol, HDL cholesterol, Triglycerides) on Cardiovascular disease risk
+#'
+#' This dataset is created from four genome-wide association studies:
+#' \enumerate{
+#' \item A 2010 GWAS of blood lipids (Teslovich et al.\, 2010), named "teslovich_2010" in the dataset.
+#' \item The MetaboChip (MC) data in a 2013 GWAS of blood lipids (Willer et al.\, 2013), named "mc_2013" in the dataset.
+#' \item The CARDIoGRAMplusC4D meta-analysis of coronary artery disease (CARDIoGRAMplusC4D Consortium, 2013), named "cardiogramplusc4d" in the dataset.
+#' \item The UK BioBank GWAS of self reported heart attach (interim release by the Neale lab), named "ukbb_self_report_heart" in the dataset.
+#' }
+#'
+#' \code{lipid.cad} contains in total 24 sub-datasets, each is suitable for a Mendelian randomization study. To obtain a sub-dataset, you must decide on
+#' \describe{
+#' \item{lipid}{Which lipid trait to consider? Either \code{ldl}, \code{hdl}, or \code{tg}.}
+#' \item{gwas.selection}{Which GWAS is used for selection? Either \code{teslovich_2010} or \code{mc_2013}.}
+#' \item{gwas.exposure}{Which GWAS is used for exposure? Either \code{teslovich_2010} or \code{mc_2013} and must be different from \code{gwas.selection}.}
+#' \item{gwas.outcome}{Which GWAS is used for outcome? Either \code{cardiogramplusc4d} or \code{ukbb_self_report_heart}.}
+#' \item{restrict}{Should we use SNPs that are not associated with the other lipids? For example, if we are studying the effect of HDL cholesterol (so \code{lipid} is "hdl") and \code{restrict} is TRUE, then the SNPs are not associated with LDL cholesterol and triglycerides (p-value > 0.01 in the \code{gwas.selection} data).}
+#' }
+#'
+#' @docType data
+#'
+#' @usage data(lipid.cad)
+#'
+#' @format A \code{data.frame} with 26235 rows and 24 variables.
+#'
+#' @keywords datasets
+#'
+#'
+"lipid.cad"
