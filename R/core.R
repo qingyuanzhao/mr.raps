@@ -1,6 +1,4 @@
-#' Main function
-#'
-#' \code{mr.raps} is the main function.
+#' Main function (for RAPS)
 #'
 #' @param b_exp A vector of SNP effects on the exposure variable, usually obtained from a GWAS.
 #' @param b_out A vector of SNP effects on the outcome variable, usually obtained from a GWAS.
@@ -18,6 +16,8 @@
 #' @param niter Maximum number of interations to solve the estimating equations.
 #' @param tol Numerical precision.
 #'
+#' @details \code{mr.raps} is the main function for RAPS. It precedes the more general and robust function \code{mr.raps.shrinkage}.
+#'
 #' @return A list
 #' \describe{
 #' \item{beta.hat}{Estimated causal effect}
@@ -31,7 +31,7 @@
 #' \item{beta.se.bootstrap}{Median absolute deviation of the bootstrap estimates, returned if \code{se.method = "bootstrap"}}
 #' }
 #'
-#' @references Qingyuan Zhao, Jingshu Wang, Jack Bowden, Dylan S. Small. Statistical inference in two-sample summary-data Mendelian randomization using robust adjusted profile score. \url{https://arxiv.org/abs/1801.09652}.
+#' @references Qingyuan Zhao, Jingshu Wang, Gibran Hemani, Jack Bowden, Dylan S. Small. Statistical inference in two-sample summary-data Mendelian randomization using robust adjusted profile score. \url{https://arxiv.org/abs/1801.09652}.
 #'
 #' @import stats
 #' @export
@@ -336,45 +336,6 @@ mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization =
 
     out
 
-}
-
-#' Huber loss function and its derivatives
-#'
-#' @import stats
-#' @keywords internal
-#'
-rho.huber <- function(r, k = 1.345, deriv = 0) {
-    if (deriv == 0) {
-        return(ifelse(abs(r) <= k,
-                      r^2/2,
-                      k * (abs(r) - k/2)))
-    } else if (deriv == 1) {
-        return(ifelse(abs(r) <= k,
-                      r,
-                      k * sign(r)))
-    } else if (deriv == 2) {
-        return(ifelse(abs(r) <= k,
-                      1,
-                      0))
-    } else {
-        stop("deriv must be 0, 1, or 2.")
-    }
-}
-
-#' Tukey's beweight loss function and its derivatives
-#'
-#' @import stats
-#' @keywords internal
-#'
-rho.tukey <- function(r, k = 4.685, deriv = 0) {
-    if (deriv == 0) {
-        pmin(1 - (1 - (r/k)^2)^3, 1)
-    } else if (deriv == 1) {
-        r * (1 - (r / k)^2)^2 * (abs(r) <= k)
-    } else if (deriv == 2) {
-        t <- (r/k)^2
-        ifelse(t < 1, (1 - t) * (1 - 5 * t), 0)
-    }
 }
 
 #' \code{mr.raps.simple.robust}: No overdispersion, robust loss

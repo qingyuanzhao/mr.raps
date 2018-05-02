@@ -3,11 +3,11 @@
 \name{mr.raps}
 \alias{mr.raps}
 \alias{mr.raps.all}
-\alias{mr.raps.overdispersed}
-\alias{mr.raps.overdispersed.robust}
 \alias{mr.raps.simple}
+\alias{mr.raps.overdispersed}
 \alias{mr.raps.simple.robust}
-\title{Main function}
+\alias{mr.raps.overdispersed.robust}
+\title{Main function (for RAPS)}
 \usage{
 mr.raps(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
   loss.function = c("l2", "huber", "tukey"), diagnosis = FALSE,
@@ -80,7 +80,7 @@ A list
 }
 }
 \description{
-\code{mr.raps} is the main function.
+Main function (for RAPS)
 
 \code{mr.raps.all}: Quick analysis with all six methods
 
@@ -91,6 +91,9 @@ A list
 \code{mr.raps.simple.robust}: No overdispersion, robust loss
 
 \code{mr.raps.overdispersed.robust}: Overdispersed, robust loss
+}
+\details{
+\code{mr.raps} is the main function for RAPS. It precedes the more general and robust function \code{mr.raps.shrinkage}.
 }
 \section{Functions}{
 \itemize{
@@ -104,6 +107,7 @@ A list
 
 \item \code{mr.raps.overdispersed.robust}: 
 }}
+
 \examples{
 
 data(bmi.sbp)
@@ -134,6 +138,5 @@ detach(bmi.bmi)
 
 }
 \references{
-Qingyuan Zhao, Jingshu Wang, Jack Bowden, Dylan S. Small. Statistical inference in two-sample summary-data Mendelian randomization using robust adjusted profile score. \url{https://arxiv.org/abs/1801.09652}.
+Qingyuan Zhao, Jingshu Wang, Gibran Hemani, Jack Bowden, Dylan S. Small. Statistical inference in two-sample summary-data Mendelian randomization using robust adjusted profile score. \url{https://arxiv.org/abs/1801.09652}.
 }
-

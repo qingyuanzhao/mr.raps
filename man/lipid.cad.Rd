@@ -28,4 +28,3 @@ This dataset is created from four genome-wide association studies:
 }
 }
 \keyword{datasets}
-

@@ -10,6 +10,11 @@
 #'
 #' @details This function assumes that \eqn{z} is distributed as \eqn{N(\gamma, 1)} and \eqn{\gamma} follows a Gaussian mixture model. It fits this deconvolution model by maximum likelihood and outputs the estimated mixture distribution.
 #'
+#' @examples
+#' z <- c(sqrt(2) * rnorm(900), sqrt(17) * rnorm(100)) # So the correct sigma = (1, 4) and p = (0.9, 0.1)
+#' fit.mixture.model(z)
+#'
+#' @export
 #'
 fit.mixture.model <- function(z, n = 2, ntry = 10, force.mu.zero = TRUE, diagnosis = FALSE) {
 
@@ -82,4 +87,276 @@ fit.mixture.model <- function(z, n = 2, ntry = 10, force.mu.zero = TRUE, diagnos
     }
 
     list(p = p, mu = mu, sigma = sigma)
+}
+
+#' Compute the posterior mean under spike-and-slab Gaussian prior
+#'
+#' @param z a vector of z-scores
+#' @param sigma a vector of standard deviations of \code{z} (if \code{sigma} is a single number, it is expanded to a vector)
+#' @param p prior: mixture proportion
+#' @param mu prior: mean
+#' @param sigma.prior prior: standard deviation
+#' @param deriv compute the posterior mean (\code{deriv = 0}) or its derivative (\code{deriv = 1})
+#'
+#' @details Similar to \code{fit.mixture.model}, this function assumes that \eqn{z} is distributed as \eqn{N(\gamma, 1)} and \eqn{\gamma} follows a Gaussian mixture model. The function computes the posterior mean \eqn{E[\gamma|z]}.
+#'
+#' @return a vector
+#'
+#' @examples
+#'
+#' require(mr.raps)
+#' data(lipid.cad)
+#' data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+#' z <- data$beta.exposure / data$se.exposure
+#' prior.param <- fit.mixture.model(z)
+#'
+#' z.seq <- seq(-5, 5, 0.1)
+#' gamma.hat <- posterior.mean(z.seq, 1, prior.param$p, prior.param$mu, prior.param$sigma)
+#' gamma.hat.deriv <- posterior.mean(z.seq, 1, prior.param$p, prior.param$mu, prior.param$sigma, deriv = 1)
+#' par(mfrow = c(1, 2))
+#' plot(z.seq, gamma.hat, type = "l")
+#' plot(z.seq, gamma.hat.deriv, type = "l")
+#'
+#' @export
+#'
+posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
+    if (length(z) > 1) {
+        if (length(sigma) == 1) {
+            sigma <- rep(sigma, length(z))
+        }
+        stopifnot(length(z) == length(sigma))
+        return(sapply(1:length(z), function(k)
+            posterior.mean(z[k], sigma[k], p, mu, sigma.prior, deriv)))
+    }
+    if (length(p) == 1){
+        p <- c(p, 1 - p)
+    }
+    stopifnot(length(p) == length(mu) && length(p) == length(sigma.prior))
+    stopifnot(deriv %in% c(0, 1))
+
+    mu.tilde <- (z/sigma^2 + mu/sigma.prior^2) / (1/sigma^2 + 1/sigma.prior^2)
+    ## sigma.tilde <- sqrt(1/(1/sigma^2 + 1/sigma.prior^2)) ## not needed
+    p.tilde <- p * dnorm(z, mu, sqrt(sigma^2 + sigma.prior^2))
+
+    if (deriv == 0) {
+        return(sum(p.tilde * mu.tilde) / sum(p.tilde))
+    } else {
+        diff.mu.tilde <- (1/sigma^2) / (1/sigma^2 + 1/sigma.prior^2)
+        diff.p.tilde <- - p * dnorm(z, mu, sqrt(sigma^2 + sigma.prior^2)) * (z - mu) / (sigma^2 + sigma.prior^2)
+        return(sum(diff.p.tilde * mu.tilde + p.tilde * diff.mu.tilde) / sum(p.tilde) - sum(p.tilde * mu.tilde) * sum(diff.p.tilde) / sum(p.tilde)^2)
+    }
+}
+
+#' Main function (for RAPS with shrinkage)
+#'
+#' @inheritParams mr.raps
+#' @param shrinkage If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy.
+#' @param prior.param Parameters of the Gaussian spike-and-slab prior
+#' @param num.init Number of initializations.
+#'
+#' @details
+#' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps}. See Efron and Hinkley (1978) referenced below.
+#'
+#' Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization.
+#'
+#' @references
+#' Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2018). A genome-wide design and an empirical partially Bayes approach to increase the power of Mendelian randomization, with application to the effect of blood lipids on cardiovascular disease. <arXiv:1804.07371>.
+#' Efron, B. and Hinkley, D. V. (1978). Assessing the accuracy of the maximum likelihood estimator: Observed versus expected Fisher information. Biometrika, 65(3), 457--483.
+#'
+#' @examples
+#'
+#' require(mr.raps)
+#' data(lipid.cad)
+#' data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+#' z <- data$beta.exposure / data$se.exposure
+#' prior.param <- fit.mixture.model(z)
+#'
+#' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
+#' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param, diagnosis = TRUE)
+#'
+#' @export
+#'
+mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, overdispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = TRUE, prior.param = NULL, diagnosis = FALSE, se.method = c("sandwich", "bootstrap"), num.init = 10) {
+
+    library(mr.raps)
+    library(rootSolve)
+
+    se.method <- match.arg(se.method)
+    if (se.method == "bootstrap") {
+        B <- 100
+        beta.hat <- rep(0, B)
+        tau2.hat <- rep(0, B)
+        for (b in 1:B) {
+            if (b %% 20 == 0) {
+                print(paste0("Bootstrap iteration: ", b, "; Total: ", B, "."))
+            }
+            s <- sample.int(length(b_exp), replace = TRUE)
+            res <- mr.raps.univariate.general(b_exp[s], b_out[s], se_exp[s], se_out[s], overdispersion, loss.function, k, shrinkage, prior.param, diagnosis = FALSE, num.init = 10)
+            beta.hat[b] <- res$beta.hat
+            tau2.hat[b] <- res$tau2.hat
+        }
+        hist(beta.hat)
+        return(list(beta.hat = mean(beta.hat), beta.se = sd(beta.hat), tau2.hat = mean(tau2.hat), tau2.se = sd(tau2.hat)))
+    }
+
+    loss.function <- match.arg(loss.function, c("l2", "huber", "tukey"))
+    rho <- switch(loss.function,
+                  l2 = function(r, ...) rho.l2(r, k, ...),
+                  huber = function(r, ...) rho.huber(r, k, ...),
+                  tukey = function(r, ...) rho.tukey(r, k, ...))
+
+    delta <- integrate(function(x) x * rho(x, deriv = 1) * dnorm(x), -Inf, Inf)$value
+    c1 <- integrate(function(x) rho(x, deriv = 1)^2 * dnorm(x), -Inf, Inf)$value
+    c2 <- integrate(function(x) x^2 * rho(x, deriv = 1)^2 * dnorm(x), -Inf, Inf)$value - delta^2
+    c3 <- integrate(function(x) x^2 * rho(x, deriv = 2) * dnorm(x), -Inf, Inf)$value
+
+    get.t <- function(beta, tau2) {
+        (b_out - b_exp * beta) / sqrt(tau2 + se_out^2 + se_exp^2 * beta^2)
+    }
+
+    get.gamma.hat <- function(beta, tau2, deriv = c("0", "beta", "tau2")) {
+        deriv <- match.arg(deriv, c("0", "beta", "tau2"))
+        gamma.mle <- (b_exp/ se_exp^2 + beta * b_out/ (se_out^2 + tau2)) / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+        if (deriv == "0") {
+            if (shrinkage) {
+                a <- posterior.mean(gamma.mle / se_exp,
+                                    sqrt(1 / (1 + beta^2 * se_exp^2 / (se_out^2 + tau2))),
+                                    prior.param$p, prior.param$mu, prior.param$sigma)
+                gamma.hat <- a * se_exp
+            } else {
+                gamma.hat <- gamma.mle
+            }
+            return(gamma.hat)
+        }
+
+        if (deriv == "beta") {
+            gamma.mle.deriv <- (b_out/ (se_out^2 + tau2)) / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+        } else { ## deriv == "tau2"
+            gamma.mle.deriv <- - beta * b_out / (se_out^2 + tau2)^2 / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+        }
+        if (shrinkage) {
+            shrinkage.deriv <- posterior.mean(
+                gamma.mle / se_exp,
+                sqrt(1 / (1 + beta^2 * se_exp^2 / (se_out^2 + tau2))),
+                prior.param$p, prior.param$mu, prior.param$sigma,
+                deriv = 1)
+            return(gamma.mle.deriv * shrinkage.deriv)
+        } else {
+            return(gamma.mle.deriv)
+        }
+    }
+
+    psi <- function(param) {
+        if (!overdispersion) {
+            beta <- param[1]
+            tau2 <- 0
+        } else {
+            beta <- param[1]
+            tau2 <- param[2]
+        }
+        t <- get.t(beta, tau2)
+        gamma.hat <- get.gamma.hat(beta, tau2)
+        v <- beta^2 * se_exp^2 + se_out^2 + tau2
+        psi1 <- sum(gamma.hat * rho(t, deriv = 1) / sqrt(v))
+        if (overdispersion) {
+            psi2 <- sum((t * rho(t, deriv = 1) - delta) / v)
+            return(c(psi1, psi2))
+        } else {
+            return(psi1)
+        }
+    }
+
+    if (!overdispersion) {
+        res <- mr.raps.simple(b_exp, b_out, se_exp, se_out)
+        init.param <- res$beta.hat
+    } else {
+        res <- mr.raps.overdispersed(b_exp, b_out, se_exp, se_out, suppress.warning = TRUE)
+        init.param <- c(res$beta.hat, res$tau2.hat)
+    }
+
+    beta.init <- init.param[1] + c(0, 2 * init.param[1] * rnorm(num.init - 1))
+    res <- list()
+    beta <- rep(NA, num.init)
+    for (i in 1:num.init) {
+        init.param[1] <- beta.init[i]
+        suppressWarnings(res[[i]] <- multiroot(psi, init.param))
+        if ((overdispersion) && (!is.na(res[[i]]$root[2])) && (res[[i]]$root[2] > median(se_out) * 10)) {
+            beta[i] <- NA
+        } else {
+            beta[i] <- res[[i]]$root[1]
+        }
+    }
+    j <- which.min(abs(beta - beta.init[1]))
+    if (length(j) == 0) {
+        warning("Cannot find solution with finite overdispersion. Using tau2 = 0.")
+        return(mr.raps.univariate.general(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnosis))
+        ## res <- multiroot(function(beta) psi(c(beta, 0))[1], init.param[1])
+        ## estimated.param <- c(res$root, 0)
+    }
+
+    for(i in 1:num.init) {
+        if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 100 * abs(beta[j] - beta.init[1])) {
+            warning(paste("The estimating equations might have another finite root. The smallest root is beta =", beta[j], "and the other root is beta =", beta[i], "and the initialization is beta =", beta.init[1]))
+        }
+        if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 5 * abs(beta[j] - beta.init[1])) {
+            warning(paste("Found two very close solutions: beta =", beta[j], "and", beta[i]))
+            return(list(beta.hat = NA, beta.se = NA, tau2.hat = NA, tau2.se = NA))
+        }
+    }
+    res <- res[[j]]
+
+    if (overdispersion && res$root[2] < 0) {
+        warning("Estimated overdispersion is negative. Using tau2 = 0.")
+        return(mr.raps.univariate.general(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnosis))
+        ## res <- multiroot(function(beta) psi(c(beta, 0))[1], init.param[1])
+        ## estimated.param <- c(res$root, 0)
+    } else {
+        estimated.param <- res$root
+    }
+
+    if (!overdispersion) {
+        beta <- estimated.param[1]
+        tau2 <- 0
+        t <- get.t(beta, tau2)
+        gamma.hat <- get.gamma.hat(beta, tau2)
+        v <- beta^2 * se_exp^2 + se_out^2 + tau2
+        V1 <- c1 * sum(gamma.hat^2 / v)
+        V2 <- sum((get.gamma.hat(beta, tau2, deriv = "beta") * rho(t, deriv = 1) + gamma.hat * delta * (- b_exp) / sqrt(v)) / sqrt(v))
+        beta.se <- sqrt(V1 / V2^2)
+        tau2.se <- 0
+    } else {
+        beta <- estimated.param[1]
+        tau2 <- estimated.param[2]
+        t <- get.t(beta, tau2)
+        gamma.hat <- get.gamma.hat(beta, tau2)
+        v <- beta^2 * se_exp^2 + se_out^2 + tau2
+
+        V1 <- diag(c(c1 * sum(gamma.hat^2 / v), c2 * sum(1 / v^2)))
+        V2 <- matrix(c(sum((get.gamma.hat(beta, tau2, deriv = "beta") * rho(t, deriv = 1) + gamma.hat * delta * (- b_exp) / sqrt(v)) / sqrt(v)),
+                       0,
+                       sum(get.gamma.hat(beta, tau2, "tau2") * rho(t, deriv = 1) / sqrt(v)),
+                       (delta + c3) / 2 * sum(1/v^2)), 2, 2)
+        V <- solve(V2) %*% V1 %*% t(solve(V2))
+        beta.se <- sqrt(V[1, 1])
+        tau2.se <- sqrt(V[2, 2])
+    }
+
+    if (diagnosis) {
+        t <- get.t(beta, tau2)
+        par(mfrow = c(1, 3))
+        qqnorm(t)
+        abline(0, 1)
+        gamma.hat <- get.gamma.hat(beta, tau2)
+        v <- beta^2 * se_exp^2 + se_out^2 + tau2
+        gamma.hat.z <- gamma.hat / sqrt(v)
+        t <- t * sign(gamma.hat.z)
+        gamma.hat.z <- abs(gamma.hat.z)
+        plot(gamma.hat.z, t, xlab = "Weight", ylab = "Standardized residual")
+        plot(rank(- gamma.hat.z), t, xlab = "Rank of weight", ylab = "Standardized residual")
+        print("Test of independence:")
+        print(summary(lm(t ~ rank(gamma.hat.z) - 1)))
+    }
+
+    list(beta.hat = beta, tau2.hat = tau2, beta.se = beta.se, tau2.se = tau2.se)
+
 }

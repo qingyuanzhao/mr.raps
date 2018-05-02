@@ -8,9 +8,10 @@ Description: Mendelian randomization is a method of identifying and estimating a
 Imports:
     stats,
     graphics,
-    nortest
+    nortest,
+    rootSolve
 Depends:
     R (>= 2.10)
 License: GPL-3
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
 LazyData: true
