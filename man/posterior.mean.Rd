@@ -32,7 +32,7 @@ Similar to \code{fit.mixture.model}, this function assumes that \eqn{z} is distr
 
 require(mr.raps)
 data(lipid.cad)
-data <- subset(lipid.cad, lipid == "ldl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
 z <- data$beta.exposure / data$se.exposure
 prior.param <- fit.mixture.model(z)
 

@@ -11,7 +11,8 @@
 #' @details This function assumes that \eqn{z} is distributed as \eqn{N(\gamma, 1)} and \eqn{\gamma} follows a Gaussian mixture model. It fits this deconvolution model by maximum likelihood and outputs the estimated mixture distribution.
 #'
 #' @examples
-#' z <- c(sqrt(2) * rnorm(900), sqrt(17) * rnorm(100)) # So the correct sigma = (1, 4) and p = (0.9, 0.1)
+#' z <- c(sqrt(2) * rnorm(900), sqrt(17) * rnorm(100))
+#' ## So the correct sigma = (1, 4) and p = (0.9, 0.1)
 #' fit.mixture.model(z)
 #'
 #' @export
@@ -172,11 +173,18 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #' prior.param <- fit.mixture.model(z)
 #'
 #' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
-#' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param, diagnosis = TRUE)
+#' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE,
+#' prior.param = prior.param)
+#'
+#' ## Diagnostic plots
+#' out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber",
+#' shrinkage = TRUE, prior.param = prior.param, diagnosis = TRUE)
 #'
 #' @export
 #'
-mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, overdispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = TRUE, prior.param = NULL, diagnosis = FALSE, se.method = c("sandwich", "bootstrap"), num.init = 10) {
+#' @importFrom rootSolve multiroot
+#'
+mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = TRUE, prior.param = NULL, diagnosis = FALSE, se.method = c("sandwich", "bootstrap"), num.init = 10) {
 
     library(mr.raps)
     library(rootSolve)
@@ -191,7 +199,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, overdispersion = FAL
                 print(paste0("Bootstrap iteration: ", b, "; Total: ", B, "."))
             }
             s <- sample.int(length(b_exp), replace = TRUE)
-            res <- mr.raps.univariate.general(b_exp[s], b_out[s], se_exp[s], se_out[s], overdispersion, loss.function, k, shrinkage, prior.param, diagnosis = FALSE, num.init = 10)
+            res <- mr.raps.shrinkage(b_exp[s], b_out[s], se_exp[s], se_out[s], over.dispersion, loss.function, k, shrinkage, prior.param, diagnosis = FALSE, num.init = 10)
             beta.hat[b] <- res$beta.hat
             tau2.hat[b] <- res$tau2.hat
         }
@@ -247,7 +255,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, overdispersion = FAL
     }
 
     psi <- function(param) {
-        if (!overdispersion) {
+        if (!over.dispersion) {
             beta <- param[1]
             tau2 <- 0
         } else {
@@ -258,7 +266,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, overdispersion = FAL
         gamma.hat <- get.gamma.hat(beta, tau2)
         v <- beta^2 * se_exp^2 + se_out^2 + tau2
         psi1 <- sum(gamma.hat * rho(t, deriv = 1) / sqrt(v))
-        if (overdispersion) {
+        if (over.dispersion) {
             psi2 <- sum((t * rho(t, deriv = 1) - delta) / v)
             return(c(psi1, psi2))
         } else {
@@ -266,7 +274,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, overdispersion = FAL
         }
     }
 
-    if (!overdispersion) {
+    if (!over.dispersion) {
         res <- mr.raps.simple(b_exp, b_out, se_exp, se_out)
         init.param <- res$beta.hat
     } else {
@@ -280,7 +288,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, overdispersion = FAL
     for (i in 1:num.init) {
         init.param[1] <- beta.init[i]
         suppressWarnings(res[[i]] <- multiroot(psi, init.param))
-        if ((overdispersion) && (!is.na(res[[i]]$root[2])) && (res[[i]]$root[2] > median(se_out) * 10)) {
+        if ((over.dispersion) && (!is.na(res[[i]]$root[2])) && (res[[i]]$root[2] > median(se_out) * 10)) {
             beta[i] <- NA
         } else {
             beta[i] <- res[[i]]$root[1]
@@ -288,8 +296,8 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, overdispersion = FAL
     }
     j <- which.min(abs(beta - beta.init[1]))
     if (length(j) == 0) {
-        warning("Cannot find solution with finite overdispersion. Using tau2 = 0.")
-        return(mr.raps.univariate.general(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnosis))
+        warning("Cannot find solution with finite over.dispersion. Using tau2 = 0.")
+        return(mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnosis))
         ## res <- multiroot(function(beta) psi(c(beta, 0))[1], init.param[1])
         ## estimated.param <- c(res$root, 0)
     }
@@ -305,16 +313,16 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, overdispersion = FAL
     }
     res <- res[[j]]
 
-    if (overdispersion && res$root[2] < 0) {
+    if (over.dispersion && res$root[2] < 0) {
         warning("Estimated overdispersion is negative. Using tau2 = 0.")
-        return(mr.raps.univariate.general(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnosis))
+        return(mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnosis))
         ## res <- multiroot(function(beta) psi(c(beta, 0))[1], init.param[1])
         ## estimated.param <- c(res$root, 0)
     } else {
         estimated.param <- res$root
     }
 
-    if (!overdispersion) {
+    if (!over.dispersion) {
         beta <- estimated.param[1]
         tau2 <- 0
         t <- get.t(beta, tau2)
@@ -355,8 +363,9 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, overdispersion = FAL
         plot(rank(- gamma.hat.z), t, xlab = "Rank of weight", ylab = "Standardized residual")
         print("Test of independence:")
         print(summary(lm(t ~ rank(gamma.hat.z) - 1)))
+        list(beta.hat = beta, tau2.hat = tau2, beta.se = beta.se, tau2.se = tau2.se, t = t, gamma.hat.z = gamma.hat.z)
+    } else {
+        list(beta.hat = beta, tau2.hat = tau2, beta.se = beta.se, tau2.se = tau2.se)
     }
-
-    list(beta.hat = beta, tau2.hat = tau2, beta.se = beta.se, tau2.se = tau2.se)
 
 }

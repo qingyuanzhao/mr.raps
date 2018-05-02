@@ -4,7 +4,7 @@
 \alias{mr.raps.shrinkage}
 \title{Main function (for RAPS with shrinkage)}
 \usage{
-mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, overdispersion = FALSE,
+mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
   loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2
   = 2, huber = 1.345, tukey = 4.685), shrinkage = TRUE, prior.param = NULL,
   diagnosis = FALSE, se.method = c("sandwich", "bootstrap"),
@@ -18,6 +18,8 @@ mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, overdispersion = FALSE,
 \item{se_exp}{A vector of standard errors of \code{b_exp}.}
 
 \item{se_out}{A vector of standard errors of \code{b_out}.}
+
+\item{over.dispersion}{Should the model consider overdispersion (systematic pleiotropy)? Default is FALSE.}
 
 \item{loss.function}{Either the squared error loss (\code{l2}) or robust loss functions/scores (\code{huber} or \code{tukey}).}
 
@@ -45,12 +47,17 @@ Because the estimating equations are highly non-linear, it is possible that ther
 
 require(mr.raps)
 data(lipid.cad)
-data <- subset(lipid.cad, lipid == "ldl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
 z <- data$beta.exposure / data$se.exposure
 prior.param <- fit.mixture.model(z)
 
 mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
-mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param, diagnosis = TRUE)
+mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE,
+prior.param = prior.param)
+
+## Diagnostic plots
+out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber",
+shrinkage = TRUE, prior.param = prior.param, diagnosis = TRUE)
 
 }
 \references{
