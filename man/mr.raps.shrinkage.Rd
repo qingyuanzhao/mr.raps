@@ -70,11 +70,6 @@ prior.param <- fit.mixture.model(z)
 mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
 mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
 
-## Diagnostic plots
-\dontrun{
-out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param, diagnosis = TRUE)
-}
-
 }
 \references{
 Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2018). A genome-wide design and an empirical partially Bayes approach to increase the power of Mendelian randomization, with application to the effect of blood lipids on cardiovascular disease. <arXiv:1804.07371>.

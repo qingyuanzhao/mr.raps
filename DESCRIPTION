@@ -10,7 +10,8 @@ Imports:
     ggplot2,
     graphics,
     nortest,
-    rootSolve
+    rootSolve,
+    splines
 Depends:
     R (>= 2.10)
 License: GPL-3

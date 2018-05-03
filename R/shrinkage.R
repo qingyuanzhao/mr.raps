@@ -350,7 +350,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     ## qqnorm(t)
     ## abline(0, 1)
     gamma.hat <- get.gamma.hat(beta, tau2)
-    v <- beta^2 * se_exp^2 + se_out^2 + tau2
+    v <- 1 / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
     gamma.hat.z <- gamma.hat / sqrt(v)
     t <- t * sign(gamma.hat.z)
     gamma.hat.z <- abs(gamma.hat.z)
@@ -386,4 +386,59 @@ print.mr.raps <- function(out) {
 plot.mr.raps <- function(out) {
     df <- data.frame(t = out$t, w = out$gamma.hat.z)
     ggplot(df) + aes(x = w, y = t, shape) + geom_point() + geom_smooth(method = "loess") + xlab("Absolute weight") + ylab("Standardized residual")
+}
+
+#' Recommended \code{mr.raps} procedure
+#'
+#' @param data A data frame (see Details)
+#' @param verbose Print the result
+#'
+#' @details
+#' The data frame should contain the following variables:
+#' \enumerate{
+#' \item beta.exposure
+#' \item beta.outcome
+#' \item se.exposure
+#' \item se.outcome
+#' }
+#'
+#' @import splines
+#' @export
+#'
+mr.raps.recommend <- function(data, verbose = TRUE) {
+    prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
+    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
+    cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))
+    cat(paste0("Estimated pleiotropy variance: ", signif(out$tau2.hat, 3), ", standard error: ", signif(out$tau2.se, 3), ", p-value: ", signif(pnorm(-abs(out$tau2.hat / out$tau2.se)) * 2, 3), ".\n"))
+
+    cat(paste0("ANOVA test: are the weights and residuals independent? \n"))
+    weights <- out$gamma.hat.z
+    std.resids <- out$t
+    df <- max(round(length(weights) / 50), 3)
+    lm.test <- lm(std.resids ~ bs(weights, df) - 1)
+    print(anova(lm.test))
+
+    cat("Showing diagnostic plot ...\n")
+    plot(out)
+    out
+}
+
+#' Generate diagnostic plots for publishing
+#'
+#' @keywords internal
+#'
+#' @import ggplot2
+#'
+mr.raps.publish <- function(data) {
+    prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
+    out1 <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
+    out2 <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
+    df <- data.frame(SNP = rep(data$SNP, 2),
+                     t = c(out1$t, out2$t),
+                     w = c(out1$gamma.hat.z, out2$gamma.hat.z),
+                     pval.selection = rep(data$pval.selection, 2),
+                     weight.method = rep(c("MLE", "Shrinkage"), each = nrow(data)))
+
+    ggplot(df) + aes(x = w, y = t) + geom_point(aes(shape = (pval.selection < 5e-8), color = (pval.selection < 5e-8), size = (pval.selection < 5e-8)), alpha = 0.7) + facet_grid(weight.method ~ .) + geom_smooth(method = "loess", span = 1/3) + xlab("Absolute weight") + ylab("Standardized residual") + scale_shape_discrete(guide = FALSE) + scale_color_discrete(guide = FALSE) + scale_size_discrete(guide = FALSE, range = c(1.5, 2.5))+ theme_bw(base_size = 18)
+
 }
