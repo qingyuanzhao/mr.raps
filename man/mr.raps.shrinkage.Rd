@@ -2,6 +2,8 @@
 % Please edit documentation in R/shrinkage.R
 \name{mr.raps.shrinkage}
 \alias{mr.raps.shrinkage}
+\alias{print.mr.raps}
+\alias{plot.mr.raps}
 \title{Main function (for RAPS with shrinkage)}
 \usage{
 mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
@@ -9,6 +11,10 @@ mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
   = 2, huber = 1.345, tukey = 4.685), shrinkage = TRUE, prior.param = NULL,
   diagnosis = FALSE, se.method = c("sandwich", "bootstrap"),
   num.init = 10)
+
+\method{print}{mr.raps}(out)
+
+\method{plot}{mr.raps}(out)
 }
 \arguments{
 \item{b_exp}{A vector of SNP effects on the exposure variable, usually obtained from a GWAS.}
@@ -34,6 +40,8 @@ mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
 \item{se.method}{How should the standard error be estimated? Either by sandwich variance formula (default and recommended) or the bootstrap.}
 
 \item{num.init}{Number of initializations.}
+
+\item{out}{a \code{mr.raps} object}
 }
 \description{
 Main function (for RAPS with shrinkage)
@@ -43,6 +51,13 @@ Main function (for RAPS with shrinkage)
 
 Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization.
 }
+\section{Methods (by generic)}{
+\itemize{
+\item \code{print}: Print
+
+\item \code{plot}: Diagnostic plot
+}}
+
 \examples{
 
 require(mr.raps)
@@ -51,13 +66,14 @@ data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovi
 z <- data$beta.exposure / data$se.exposure
 prior.param <- fit.mixture.model(z)
 
+## Results
 mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
-mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE,
-prior.param = prior.param)
+mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
 
 ## Diagnostic plots
-out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber",
-shrinkage = TRUE, prior.param = prior.param, diagnosis = TRUE)
+\dontrun{
+out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param, diagnosis = TRUE)
+}
 
 }
 \references{

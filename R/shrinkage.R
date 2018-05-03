@@ -172,13 +172,9 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #' z <- data$beta.exposure / data$se.exposure
 #' prior.param <- fit.mixture.model(z)
 #'
+#' ## Results
 #' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
-#' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE,
-#' prior.param = prior.param)
-#'
-#' ## Diagnostic plots
-#' out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber",
-#' shrinkage = TRUE, prior.param = prior.param, diagnosis = TRUE)
+#' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
 #'
 #' @export
 #'
@@ -349,23 +345,45 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         tau2.se <- sqrt(V[2, 2])
     }
 
-    if (diagnosis) {
-        t <- get.t(beta, tau2)
-        par(mfrow = c(1, 3))
-        qqnorm(t)
-        abline(0, 1)
-        gamma.hat <- get.gamma.hat(beta, tau2)
-        v <- beta^2 * se_exp^2 + se_out^2 + tau2
-        gamma.hat.z <- gamma.hat / sqrt(v)
-        t <- t * sign(gamma.hat.z)
-        gamma.hat.z <- abs(gamma.hat.z)
-        plot(gamma.hat.z, t, xlab = "Weight", ylab = "Standardized residual")
-        plot(rank(- gamma.hat.z), t, xlab = "Rank of weight", ylab = "Standardized residual")
-        print("Test of independence:")
-        print(summary(lm(t ~ rank(gamma.hat.z) - 1)))
-        list(beta.hat = beta, tau2.hat = tau2, beta.se = beta.se, tau2.se = tau2.se, t = t, gamma.hat.z = gamma.hat.z)
-    } else {
-        list(beta.hat = beta, tau2.hat = tau2, beta.se = beta.se, tau2.se = tau2.se)
-    }
+    t <- get.t(beta, tau2)
+    ## par(mfrow = c(1, 3))
+    ## qqnorm(t)
+    ## abline(0, 1)
+    gamma.hat <- get.gamma.hat(beta, tau2)
+    v <- beta^2 * se_exp^2 + se_out^2 + tau2
+    gamma.hat.z <- gamma.hat / sqrt(v)
+    t <- t * sign(gamma.hat.z)
+    gamma.hat.z <- abs(gamma.hat.z)
+    ## plot(gamma.hat.z, t, xlab = "Weight", ylab = "Standardized residual")
+    ## plot(rank(- gamma.hat.z), t, xlab = "Rank of weight", ylab = "Standardized residual")
+    ## print("Test of independence:")
+    ## print(summary(lm(t ~ poly(gamma.hat.z, 2) - 1)))
+    out <- list(beta.hat = beta, tau2.hat = tau2, beta.se = beta.se, tau2.se = tau2.se, t = t, gamma.hat.z = gamma.hat.z)
+    class(out) <- "mr.raps"
 
+    if (diagnosis) {
+        plot(out)
+    }
+    out
+
+}
+
+#' @describeIn mr.raps.shrinkage Print
+#' @param out a \code{mr.raps} object
+#'
+#' @export
+print.mr.raps <- function(out) {
+    print(out[1:4])
+}
+
+#' @describeIn mr.raps.shrinkage Diagnostic plot
+#' @inheritParams print.mr.raps
+#'
+#' @export
+#'
+#' @import ggplot2
+#'
+plot.mr.raps <- function(out) {
+    df <- data.frame(t = out$t, w = out$gamma.hat.z)
+    ggplot(df) + aes(x = w, y = t, shape) + geom_point() + geom_smooth(method = "loess") + xlab("Absolute weight") + ylab("Standardized residual")
 }

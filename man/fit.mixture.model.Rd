@@ -28,7 +28,8 @@ Fit a Gaussian mixture deconvolution model
 This function assumes that \eqn{z} is distributed as \eqn{N(\gamma, 1)} and \eqn{\gamma} follows a Gaussian mixture model. It fits this deconvolution model by maximum likelihood and outputs the estimated mixture distribution.
 }
 \examples{
-z <- c(sqrt(2) * rnorm(900), sqrt(17) * rnorm(100)) # So the correct sigma = (1, 4) and p = (0.9, 0.1)
+z <- c(sqrt(2) * rnorm(900), sqrt(17) * rnorm(100))
+## So the correct sigma = (1, 4) and p = (0.9, 0.1)
 fit.mixture.model(z)
 
 }

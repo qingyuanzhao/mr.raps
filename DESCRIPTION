@@ -7,6 +7,7 @@ Authors@R: c(person("Qingyuan", "Zhao", email = "qingyzhao@gmail.com", role = c(
 Description: Mendelian randomization is a method of identifying and estimating a confounded causal effect using genetic instrumental variables. This packages implements methods for two-sample Mendelian randomization with summary statistics by using Robust Adjusted Profile Score (RAPS). References: Qingyuan Zhao, Jingshu Wang, Gibran Hemani, Jack Bowden, Dylan S. Small. Statistical inference in two-sample summary-data Mendelian randomization using robust adjusted profile score. <arXiv:1801.09652>; Qingyuan Zhao, Yang Chen, Jingshu Wang, Dylan S. Small. A genome-wide design and an empirical partially Bayes approach to increase the power of Mendelian randomization, with application to the effect of blood lipids on cardiovascular disease. <arXiv:1804.07371>.
 Imports:
     stats,
+    ggplot2,
     graphics,
     nortest,
     rootSolve
