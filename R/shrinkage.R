@@ -150,15 +150,15 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 
 #' Main function (for RAPS with shrinkage)
 #'
-#' @inheritParams mr.raps
+#' @inheritParams mr.raps.v1
 #' @param shrinkage If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy.
 #' @param prior.param Parameters of the Gaussian spike-and-slab prior
 #' @param num.init Number of initializations.
 #'
 #' @details
-#' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps}. See Efron and Hinkley (1978) referenced below.
+#' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.v1} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.v1}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.v1}. See Efron and Hinkley (1978) referenced below.
 #'
-#' Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization.
+#' Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.v1} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization.
 #'
 #' @references
 #' Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2018). A genome-wide design and an empirical partially Bayes approach to increase the power of Mendelian randomization, with application to the effect of blood lipids on cardiovascular disease. <arXiv:1804.07371>.

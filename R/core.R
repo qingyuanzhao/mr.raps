@@ -1,4 +1,4 @@
-#' Main function (for RAPS)
+#' Main function for RAPS (v1)
 #'
 #' @param b_exp A vector of SNP effects on the exposure variable, usually obtained from a GWAS.
 #' @param b_out A vector of SNP effects on the outcome variable, usually obtained from a GWAS.
@@ -16,7 +16,7 @@
 #' @param niter Maximum number of interations to solve the estimating equations.
 #' @param tol Numerical precision.
 #'
-#' @details \code{mr.raps} is the main function for RAPS. It precedes the more general and robust function \code{mr.raps.shrinkage}.
+#' @details \code{mr.raps.v1} is the main function for RAPS. It is replaced by the more general and robust function \code{mr.raps.shrinkage}.
 #'
 #' @return A list
 #' \describe{
@@ -42,14 +42,14 @@
 #' attach(bmi.sbp)
 #'
 #' ## All estimators
-#' mr.raps.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
+#' mr.raps.v1.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
 #'
 #' ## Diagnostic plots
-#' res <- mr.raps(beta.exposure, beta.outcome, se.exposure, se.outcome,
+#' res <- mr.raps.v1(beta.exposure, beta.outcome, se.exposure, se.outcome,
 #' diagnosis = TRUE)
-#' res <- mr.raps(beta.exposure, beta.outcome, se.exposure, se.outcome,
+#' res <- mr.raps.v1(beta.exposure, beta.outcome, se.exposure, se.outcome,
 #' TRUE, diagnosis = TRUE)
-#' res <- mr.raps(beta.exposure, beta.outcome, se.exposure, se.outcome,
+#' res <- mr.raps.v1(beta.exposure, beta.outcome, se.exposure, se.outcome,
 #' TRUE, "tukey", diagnosis = TRUE)
 #'
 #' detach(bmi.sbp)
@@ -60,11 +60,11 @@
 #' ## Because both the exposure and the outcome are BMI, the true "causal" effect should be 1.
 #'
 #' ## All estimators
-#' mr.raps.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
+#' mr.raps.v1.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
 #'
 #' detach(bmi.bmi)
 #'
-mr.raps <- function(b_exp, b_out, se_exp, se_out,
+mr.raps.v1 <- function(b_exp, b_out, se_exp, se_out,
                     over.dispersion = FALSE,
                     loss.function = c("l2", "huber", "tukey"),
                     diagnosis = FALSE,
@@ -98,7 +98,7 @@ mr.raps <- function(b_exp, b_out, se_exp, se_out,
                 print(paste0("Bootstrap: ", round(b / B * 100), "% finished."))
             }
             s <- sample(1:length(b_exp), replace = TRUE)
-            fit.bootstrap[[b]] <- tryCatch(unlist(mr.raps(b_exp[s], b_out[s], se_exp[s], se_out[s], over.dispersion, loss.function, se.method = "sandwich", k = k, suppress.warning = TRUE)), error = function(e) {print(e); NA})
+            fit.bootstrap[[b]] <- tryCatch(unlist(mr.raps.v1(b_exp[s], b_out[s], se_exp[s], se_out[s], over.dispersion, loss.function, se.method = "sandwich", k = k, suppress.warning = TRUE)), error = function(e) {print(e); NA})
         }
         fit.bootstrap <- data.frame(do.call(rbind, fit.bootstrap))
         fit <- c(fit,
@@ -109,17 +109,17 @@ mr.raps <- function(b_exp, b_out, se_exp, se_out,
     fit
 }
 
-#' \code{mr.raps.all}: Quick analysis with all six methods
+#' \code{mr.raps.all}: Quick analysis with all six v1 methods
 #'
-#' @describeIn mr.raps
+#' @describeIn mr.raps.v1
 #'
 #' @export
 #'
-mr.raps.all <- function(b_exp, b_out, se_exp, se_out) {
+mr.raps.v1.all <- function(b_exp, b_out, se_exp, se_out) {
     res <- data.frame()
     for (over.dispersion in c(FALSE, TRUE)) {
         for (loss.function in c("l2", "huber", "tukey")) {
-            out <- mr.raps(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function)
+            out <- mr.raps.v1(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function)
             out <- data.frame(out)
             out$over.dispersion <- over.dispersion
             out$loss.function <- loss.function
@@ -131,7 +131,7 @@ mr.raps.all <- function(b_exp, b_out, se_exp, se_out) {
 
 #' \code{mr.raps.simple}: No overdispersion, l2 loss
 #'
-#' @describeIn mr.raps
+#' @describeIn mr.raps.v1
 #'
 #' @export
 #' @importFrom nortest ad.test
@@ -198,7 +198,7 @@ mr.raps.simple <- function(b_exp, b_out, se_exp, se_out, diagnosis = FALSE) {
 
 #' \code{mr.raps.overdispersed}: Overdispersion, l2 loss
 #'
-#' @describeIn mr.raps
+#' @describeIn mr.raps.v1
 #'
 #' @import stats graphics
 #' @importFrom nortest ad.test
@@ -340,7 +340,7 @@ mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization =
 
 #' \code{mr.raps.simple.robust}: No overdispersion, robust loss
 #'
-#' @describeIn mr.raps
+#' @describeIn mr.raps.v1
 #'
 #' @import stats graphics
 #' @importFrom nortest ad.test
@@ -422,7 +422,7 @@ mr.raps.simple.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = 
 
 #' \code{mr.raps.overdispersed.robust}: Overdispersed, robust loss
 #'
-#' @describeIn mr.raps
+#' @describeIn mr.raps.v1
 #'
 #' @import stats graphics
 #' @importFrom nortest ad.test
@@ -564,7 +564,7 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
 ## #'
 ## #' This function implements the modified 2nd order weighted procedure.
 ## #'
-## #' @inheritParams mr.raps
+## #' @inheritParams mr.raps.v1
 ## #'
 ## #' @references Bowden, Jack, M. Fabiola Del Greco, Cosetta Minelli, Debbie Lawlor, Nuala Sheehan, John Thompson, and George Davey Smith. "Improving the accuracy of two-sample summary data Mendelian randomization: moving beyond the NOME assumption." bioRxiv (2017): 159442.
 ## #'
