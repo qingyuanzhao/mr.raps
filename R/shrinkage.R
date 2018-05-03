@@ -376,25 +376,32 @@ print.mr.raps <- function(out) {
     print(out[1:4])
 }
 
-#' @describeIn mr.raps.shrinkage Diagnostic plot
+#' @describeIn mr.raps.shrinkage Diagnostic plots
 #' @inheritParams print.mr.raps
 #'
 #' @export
 #'
-#' @import ggplot2
+#' @import ggplot2 gridExtra
 #'
 plot.mr.raps <- function(out) {
+
+    qhnorm <- function(p) {
+        - qnorm(p / 2)
+    }
+
     df <- data.frame(t = out$t, w = out$gamma.hat.z)
-    ggplot(df) + aes(x = w, y = t, shape) + geom_point() + geom_smooth(method = "loess") + xlab("Absolute weight") + ylab("Standardized residual")
+    grid.arrange(
+        ggplot(df) + aes(x = w, y = t, shape) + geom_point() + geom_smooth(method = "loess") + xlab("Absolute weight") + ylab("Standardized residual"),
+        ggplot(df) + aes(x = qhnorm(ppoints(length(t)))[order(order(- abs(t)))], y = abs(t)) + geom_point() + geom_abline(intercept = 0, slope = 1, linetype = "dashed") + xlab("Theoretical") + ylab("Sample"),
+        ncol = 2)
 }
 
 #' Recommended \code{mr.raps} procedure
 #'
 #' @param data A data frame (see Details)
-#' @param verbose Print the result
 #'
 #' @details
-#' The data frame should contain the following variables:
+#' This function calls \code{mr.raps.shrinkage} with \code{overdispersion = TRUE}, \code{loss.function = "huber"}, \code{shrinkage = TRUE}. The input data frame should contain the following variables:
 #' \enumerate{
 #' \item beta.exposure
 #' \item beta.outcome
@@ -405,21 +412,25 @@ plot.mr.raps <- function(out) {
 #' @import splines
 #' @export
 #'
-mr.raps.recommend <- function(data, verbose = TRUE) {
+mr.raps <- function(data, diagnosis = TRUE) {
     prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
     out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
-    cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))
-    cat(paste0("Estimated pleiotropy variance: ", signif(out$tau2.hat, 3), ", standard error: ", signif(out$tau2.se, 3), ", p-value: ", signif(pnorm(-abs(out$tau2.hat / out$tau2.se)) * 2, 3), ".\n"))
 
-    cat(paste0("ANOVA test: are the weights and residuals independent? \n"))
-    weights <- out$gamma.hat.z
-    std.resids <- out$t
-    df <- max(round(length(weights) / 50), 3)
-    lm.test <- lm(std.resids ~ bs(weights, df) - 1)
-    print(anova(lm.test))
+    if (diagnosis) {
+        cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))
+        cat(paste0("Estimated pleiotropy variance: ", signif(out$tau2.hat, 3), ", standard error: ", signif(out$tau2.se, 3), ", p-value: ", signif(pnorm(-abs(out$tau2.hat / out$tau2.se)) * 2, 3), ".\n"))
 
-    cat("Showing diagnostic plot ...\n")
-    plot(out)
+        cat(paste0("ANOVA test: are the weights and residuals independent? \n"))
+        weights <- out$gamma.hat.z
+        std.resids <- out$t
+        df <- max(round(length(weights) / 50), 3)
+        lm.test <- lm(std.resids ~ bs(weights, df) - 1)
+        print(anova(lm.test))
+
+        cat("Showing diagnostic plot ...\n")
+        plot(out)
+    }
+
     out
 }
 

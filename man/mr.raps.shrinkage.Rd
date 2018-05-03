@@ -55,7 +55,7 @@ Because the estimating equations are highly non-linear, it is possible that ther
 \itemize{
 \item \code{print}: Print
 
-\item \code{plot}: Diagnostic plot
+\item \code{plot}: Diagnostic plots
 }}
 
 \examples{
