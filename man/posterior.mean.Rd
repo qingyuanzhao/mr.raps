@@ -32,13 +32,16 @@ Similar to \code{fit.mixture.model}, this function assumes that \eqn{z} is distr
 
 require(mr.raps)
 data(lipid.cad)
-data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+data <- subset(lipid.cad, lipid == "hdl" & restrict &
+gwas.selection == "teslovich_2010" &
+gwas.outcome == "cardiogramplusc4d")
 z <- data$beta.exposure / data$se.exposure
 prior.param <- fit.mixture.model(z)
 
 z.seq <- seq(-5, 5, 0.1)
 gamma.hat <- posterior.mean(z.seq, 1, prior.param$p, prior.param$mu, prior.param$sigma)
-gamma.hat.deriv <- posterior.mean(z.seq, 1, prior.param$p, prior.param$mu, prior.param$sigma, deriv = 1)
+gamma.hat.deriv <- posterior.mean(z.seq, 1, prior.param$p,
+prior.param$mu, prior.param$sigma, deriv = 1)
 par(mfrow = c(1, 2))
 plot(z.seq, gamma.hat, type = "l")
 plot(z.seq, gamma.hat.deriv, type = "l")

@@ -4,7 +4,7 @@
 #' @param n Number of mixture components.
 #' @param ntry Number of random initializations.
 #' @param force.mu.zero Should the means be forced to zero?
-#' @param diagnosis Logical indicator for showing diagnostic plots.
+#' @param diagnostics Logical indicator for showing diagnostic plots.
 #'
 #' @return A list of \code{p} (mixture proportion), \code{mu} (mean), \code{sigma} (standard deviation).
 #'
@@ -17,7 +17,7 @@
 #'
 #' @export
 #'
-fit.mixture.model <- function(z, n = 2, ntry = 10, force.mu.zero = TRUE, diagnosis = FALSE) {
+fit.mixture.model <- function(z, n = 2, ntry = 10, force.mu.zero = TRUE, diagnostics = FALSE) {
 
     loglike <- function(param, z) {
         n <- length(param) / 3
@@ -66,7 +66,7 @@ fit.mixture.model <- function(z, n = 2, ntry = 10, force.mu.zero = TRUE, diagnos
     mu[abs(mu) < 1e-6] <- 0
     sigma <- param[2*n + 1:n]
 
-    if (diagnosis) {
+    if (diagnostics) {
 
         print("Estimated mixture model:")
         print(paste0("p = ", signif(p, 3), ", ",
@@ -107,13 +107,16 @@ fit.mixture.model <- function(z, n = 2, ntry = 10, force.mu.zero = TRUE, diagnos
 #'
 #' require(mr.raps)
 #' data(lipid.cad)
-#' data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+#' data <- subset(lipid.cad, lipid == "hdl" & restrict &
+#' gwas.selection == "teslovich_2010" &
+#' gwas.outcome == "cardiogramplusc4d")
 #' z <- data$beta.exposure / data$se.exposure
 #' prior.param <- fit.mixture.model(z)
 #'
 #' z.seq <- seq(-5, 5, 0.1)
 #' gamma.hat <- posterior.mean(z.seq, 1, prior.param$p, prior.param$mu, prior.param$sigma)
-#' gamma.hat.deriv <- posterior.mean(z.seq, 1, prior.param$p, prior.param$mu, prior.param$sigma, deriv = 1)
+#' gamma.hat.deriv <- posterior.mean(z.seq, 1, prior.param$p,
+#' prior.param$mu, prior.param$sigma, deriv = 1)
 #' par(mfrow = c(1, 2))
 #' plot(z.seq, gamma.hat, type = "l")
 #' plot(z.seq, gamma.hat.deriv, type = "l")
@@ -148,17 +151,17 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
     }
 }
 
-#' Main function (for RAPS with shrinkage)
+#' Main function for RAPS (shrinkage weights)
 #'
-#' @inheritParams mr.raps.v1
+#' @inheritParams mr.raps.mle
 #' @param shrinkage If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy.
 #' @param prior.param Parameters of the Gaussian spike-and-slab prior
 #' @param num.init Number of initializations.
 #'
 #' @details
-#' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.v1} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.v1}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.v1}. See Efron and Hinkley (1978) referenced below.
+#' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle}. See Efron and Hinkley (1978) referenced below.
 #'
-#' Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.v1} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization.
+#' Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.mle} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization.
 #'
 #' @references
 #' Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2018). A genome-wide design and an empirical partially Bayes approach to increase the power of Mendelian randomization, with application to the effect of blood lipids on cardiovascular disease. <arXiv:1804.07371>.
@@ -168,22 +171,25 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #'
 #' require(mr.raps)
 #' data(lipid.cad)
-#' data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+#' data <- subset(lipid.cad, lipid == "hdl" & restrict &
+#' gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
 #' z <- data$beta.exposure / data$se.exposure
 #' prior.param <- fit.mixture.model(z)
 #'
 #' ## Results
-#' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
-#' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
+#' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome,
+#' data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
+#' \donttest{
+#' mr.raps.shrinkage(data$beta.exposure, data$beta.outcome,
+#' data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE,
+#' prior.param = prior.param)
+#' }
 #'
 #' @export
 #'
 #' @importFrom rootSolve multiroot
 #'
-mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = TRUE, prior.param = NULL, diagnosis = FALSE, se.method = c("sandwich", "bootstrap"), num.init = 10) {
-
-    library(mr.raps)
-    library(rootSolve)
+mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = TRUE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), num.init = 10) {
 
     se.method <- match.arg(se.method)
     if (se.method == "bootstrap") {
@@ -195,7 +201,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
                 print(paste0("Bootstrap iteration: ", b, "; Total: ", B, "."))
             }
             s <- sample.int(length(b_exp), replace = TRUE)
-            res <- mr.raps.shrinkage(b_exp[s], b_out[s], se_exp[s], se_out[s], over.dispersion, loss.function, k, shrinkage, prior.param, diagnosis = FALSE, num.init = 10)
+            res <- mr.raps.shrinkage(b_exp[s], b_out[s], se_exp[s], se_out[s], over.dispersion, loss.function, k, shrinkage, prior.param, diagnostics = FALSE, num.init = 10)
             beta.hat[b] <- res$beta.hat
             tau2.hat[b] <- res$tau2.hat
         }
@@ -293,7 +299,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     j <- which.min(abs(beta - beta.init[1]))
     if (length(j) == 0) {
         warning("Cannot find solution with finite over.dispersion. Using tau2 = 0.")
-        return(mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnosis))
+        return(mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnostics))
         ## res <- multiroot(function(beta) psi(c(beta, 0))[1], init.param[1])
         ## estimated.param <- c(res$root, 0)
     }
@@ -311,7 +317,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
 
     if (over.dispersion && res$root[2] < 0) {
         warning("Estimated overdispersion is negative. Using tau2 = 0.")
-        return(mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnosis))
+        return(mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnostics))
         ## res <- multiroot(function(beta) psi(c(beta, 0))[1], init.param[1])
         ## estimated.param <- c(res$root, 0)
     } else {
@@ -361,7 +367,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     out <- list(beta.hat = beta, tau2.hat = tau2, beta.se = beta.se, tau2.se = tau2.se, t = t, gamma.hat.z = gamma.hat.z)
     class(out) <- "mr.raps"
 
-    if (diagnosis) {
+    if (diagnostics) {
         plot(out)
     }
     out
@@ -369,11 +375,12 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
 }
 
 #' @describeIn mr.raps.shrinkage Print
-#' @param out a \code{mr.raps} object
+#' @param x a \code{mr.raps} object
+#' @param ... further arguments (not supported)
 #'
 #' @export
-print.mr.raps <- function(out) {
-    print(out[1:4])
+print.mr.raps <- function(x, ...) {
+    print(x[1:4])
 }
 
 #' @describeIn mr.raps.shrinkage Diagnostic plots
@@ -383,13 +390,13 @@ print.mr.raps <- function(out) {
 #'
 #' @import ggplot2 gridExtra
 #'
-plot.mr.raps <- function(out) {
+plot.mr.raps <- function(x, ...) {
 
     qhnorm <- function(p) {
         - qnorm(p / 2)
     }
 
-    df <- data.frame(t = out$t, w = out$gamma.hat.z)
+    df <- data.frame(t = x$t, w = x$gamma.hat.z)
     grid.arrange(
         ggplot(df) + aes(x = w, y = t, shape) + geom_point() + geom_smooth(method = "loess") + xlab("Absolute weight") + ylab("Standardized residual"),
         ggplot(df) + aes(x = qhnorm(ppoints(length(t)))[order(order(- abs(t)))], y = abs(t)) + geom_point() + geom_abline(intercept = 0, slope = 1, linetype = "dashed") + xlab("Theoretical") + ylab("Sample"),
@@ -399,6 +406,7 @@ plot.mr.raps <- function(out) {
 #' Recommended \code{mr.raps} procedure
 #'
 #' @param data A data frame (see Details)
+#' @param diagnostics Logical indicator for showing diagnostic plots.
 #'
 #' @details
 #' This function calls \code{mr.raps.shrinkage} with \code{overdispersion = TRUE}, \code{loss.function = "huber"}, \code{shrinkage = TRUE}. The input data frame should contain the following variables:
@@ -414,16 +422,19 @@ plot.mr.raps <- function(out) {
 #'
 #' @examples
 #'
+#' \donttest{
 #' require(mr.raps)
 #' data(lipid.cad)
-#' data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+#' data <- subset(lipid.cad, lipid == "hdl" & restrict &
+#' gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
 #' mr.raps(data)
+#' }
 #'
-mr.raps <- function(data, diagnosis = TRUE) {
+mr.raps <- function(data, diagnostics = TRUE) {
     prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
     out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
 
-    if (diagnosis) {
+    if (diagnostics) {
         cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))
         cat(paste0("Estimated pleiotropy variance: ", signif(out$tau2.hat, 3), ", standard error: ", signif(out$tau2.se, 3), ", p-value: ", signif(pnorm(-abs(out$tau2.hat / out$tau2.se)) * 2, 3), ".\n"))
 
@@ -449,8 +460,8 @@ mr.raps <- function(data, diagnosis = TRUE) {
 #'
 mr.raps.publish <- function(data) {
 
-    require(splines)
-    require(ggplot2)
+    ## require(splines)
+    ## require(ggplot2)
 
     prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
     out1 <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
@@ -476,7 +487,7 @@ mr.raps.publish <- function(data) {
     df.label <- data.frame(p = c(p1, p2),
                            beta.hat = c(out1$beta.hat, out2$beta.hat),
                            weight.method = rep(c("MLE", "Shrinkage")))
-    out.plot <- ggplot(df) + aes(x = w, y = t) + geom_point(aes(shape = (pval.selection < 5e-8), color = (pval.selection < 5e-8), size = (pval.selection < 5e-8)), alpha = 0.7)
+    out.plot <- ggplot(df) + aes_string(x = w, y = t) + geom_point(aes(shape = (pval.selection < 5e-8), color = (pval.selection < 5e-8), size = (pval.selection < 5e-8)), alpha = 0.7)
     out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 1, aes(label = paste("Estimated effect:", as.character(signif(beta.hat, 2)))), data = df.label, size = 15)
     out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 0.8, aes(label = paste("Heterogeneity p-value:", as.character(signif(p, 2)))), data = df.label, size = 15)
     out.plot <- out.plot + coord_cartesian(ylim = range(df$t) * 1.1) + facet_grid(weight.method ~ .) + geom_smooth(method = "loess", span = 1/3) + xlab("Absolute weight") + ylab("Standardized residual") + scale_shape_discrete(guide = FALSE) + scale_color_discrete(guide = FALSE) + scale_size_discrete(guide = FALSE, range = c(1.5, 2.5)) + theme_bw(base_size = 18)
@@ -487,7 +498,7 @@ mr.raps.publish <- function(data) {
 
     qq.plot <- ggplot(df) + aes(x = qhnorm(ppoints(length(t)))[order(order(- abs(t)))], y = abs(t)) + geom_point(aes(shape = (pval.selection < 5e-8), color = (pval.selection < 5e-8), size = (pval.selection < 5e-8))) + geom_abline(intercept = 0, slope = 1, linetype = "dashed") + facet_grid(weight.method ~ .) + xlab("Theoretical") + ylab("Sample") + scale_shape_discrete(guide = FALSE) + scale_color_discrete(guide = FALSE) + scale_size_discrete(guide = FALSE, range = c(1.5, 3)) + theme_bw(base_size = 18)
 
-    require(gridExtra)
+    ## require(gridExtra)
     grid.arrange(out.plot, qq.plot, ncol = 2, widths = c(2, 1))
 
 }

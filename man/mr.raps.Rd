@@ -4,10 +4,12 @@
 \alias{mr.raps}
 \title{Recommended \code{mr.raps} procedure}
 \usage{
-mr.raps(data, diagnosis = TRUE)
+mr.raps(data, diagnostics = TRUE)
 }
 \arguments{
 \item{data}{A data frame (see Details)}
+
+\item{diagnostics}{Logical indicator for showing diagnostic plots.}
 }
 \description{
 Recommended \code{mr.raps} procedure
@@ -23,9 +25,12 @@ This function calls \code{mr.raps.shrinkage} with \code{overdispersion = TRUE}, 
 }
 \examples{
 
+\donttest{
 require(mr.raps)
 data(lipid.cad)
-data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+data <- subset(lipid.cad, lipid == "hdl" & restrict &
+gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
 mr.raps(data)
+}
 
 }

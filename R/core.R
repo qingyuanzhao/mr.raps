@@ -1,4 +1,4 @@
-#' Main function for RAPS (v1)
+#' Main function for RAPS (MLE weights)
 #'
 #' @param b_exp A vector of SNP effects on the exposure variable, usually obtained from a GWAS.
 #' @param b_out A vector of SNP effects on the outcome variable, usually obtained from a GWAS.
@@ -6,7 +6,7 @@
 #' @param se_out A vector of standard errors of \code{b_out}.
 #' @param over.dispersion Should the model consider overdispersion (systematic pleiotropy)? Default is FALSE.
 #' @param loss.function Either the squared error loss (\code{l2}) or robust loss functions/scores (\code{huber} or \code{tukey}).
-#' @param diagnosis Should the function returns diagnostic plots and results? Default is FALSE
+#' @param diagnostics Should the function returns diagnostic plots and results? Default is FALSE
 #' @param pruning Should the function remove unusually large \code{se_exp}?
 #' @param se.method How should the standard error be estimated? Either by sandwich variance formula (default and recommended) or the bootstrap.
 #' @param k Threshold parameter in the Huber and Tukey loss functions.
@@ -16,7 +16,7 @@
 #' @param niter Maximum number of interations to solve the estimating equations.
 #' @param tol Numerical precision.
 #'
-#' @details \code{mr.raps.v1} is the main function for RAPS. It is replaced by the more general and robust function \code{mr.raps.shrinkage}.
+#' @details \code{mr.raps.mle} is the main function for RAPS. It is replaced by the more general and robust function \code{mr.raps.shrinkage}.
 #'
 #' @return A list
 #' \describe{
@@ -25,8 +25,8 @@
 #' \item{beta.p.value}{Two-sided p-value of \code{beta.hat}}
 #' \item{tau2.hat}{Overdispersion parameter if \code{over.dispersion = TRUE}}
 #' \item{tau2.se}{Standard error of \code{tau2.hat}}
-#' \item{std.resid}{Standardized residuals of each SNP, returned if \code{diagnosis = TRUE}}
-#' \item{beta.hat.loo}{Leave-one-out estimates of \code{beta.hat}, returned if \code{diagnosis = TRUE}}
+#' \item{std.resid}{Standardized residuals of each SNP, returned if \code{diagnostics = TRUE}}
+#' \item{beta.hat.loo}{Leave-one-out estimates of \code{beta.hat}, returned if \code{diagnostics = TRUE}}
 #' \item{beta.hat.bootstrap}{Median of the bootstrap estimates, returned if \code{se.method = "bootstrap"}}
 #' \item{beta.se.bootstrap}{Median absolute deviation of the bootstrap estimates, returned if \code{se.method = "bootstrap"}}
 #' }
@@ -42,15 +42,15 @@
 #' attach(bmi.sbp)
 #'
 #' ## All estimators
-#' mr.raps.v1.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
+#' mr.raps.mle.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
 #'
 #' ## Diagnostic plots
-#' res <- mr.raps.v1(beta.exposure, beta.outcome, se.exposure, se.outcome,
-#' diagnosis = TRUE)
-#' res <- mr.raps.v1(beta.exposure, beta.outcome, se.exposure, se.outcome,
-#' TRUE, diagnosis = TRUE)
-#' res <- mr.raps.v1(beta.exposure, beta.outcome, se.exposure, se.outcome,
-#' TRUE, "tukey", diagnosis = TRUE)
+#' res <- mr.raps.mle(beta.exposure, beta.outcome, se.exposure, se.outcome,
+#' diagnostics = TRUE)
+#' res <- mr.raps.mle(beta.exposure, beta.outcome, se.exposure, se.outcome,
+#' TRUE, diagnostics = TRUE)
+#' res <- mr.raps.mle(beta.exposure, beta.outcome, se.exposure, se.outcome,
+#' TRUE, "tukey", diagnostics = TRUE)
 #'
 #' detach(bmi.sbp)
 #'
@@ -60,14 +60,14 @@
 #' ## Because both the exposure and the outcome are BMI, the true "causal" effect should be 1.
 #'
 #' ## All estimators
-#' mr.raps.v1.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
+#' mr.raps.mle.all(beta.exposure, beta.outcome, se.exposure, se.outcome)
 #'
 #' detach(bmi.bmi)
 #'
-mr.raps.v1 <- function(b_exp, b_out, se_exp, se_out,
+mr.raps.mle <- function(b_exp, b_out, se_exp, se_out,
                     over.dispersion = FALSE,
                     loss.function = c("l2", "huber", "tukey"),
-                    diagnosis = FALSE,
+                    diagnostics = FALSE,
                     pruning = TRUE,
                     se.method = c("sandwich", "bootstrap"),
                     k = switch(loss.function[1], l2 = NULL, huber = 1.345, tukey = 4.685),
@@ -79,15 +79,15 @@ mr.raps.v1 <- function(b_exp, b_out, se_exp, se_out,
 
     if (loss.function == "l2") {
         if (!over.dispersion) {
-            fit <- mr.raps.simple(b_exp, b_out, se_exp, se_out, diagnosis = diagnosis)
+            fit <- mr.raps.simple(b_exp, b_out, se_exp, se_out, diagnostics = diagnostics)
         } else {
-            fit <- mr.raps.overdispersed(b_exp, b_out, se_exp, se_out, diagnosis = diagnosis, pruning = pruning, suppress.warning = suppress.warning)
+            fit <- mr.raps.overdispersed(b_exp, b_out, se_exp, se_out, diagnostics = diagnostics, pruning = pruning, suppress.warning = suppress.warning)
         }
     } else {
         if (!over.dispersion) {
-            fit <- mr.raps.simple.robust(b_exp, b_out, se_exp, se_out, loss.function, k, diagnosis = diagnosis)
+            fit <- mr.raps.simple.robust(b_exp, b_out, se_exp, se_out, loss.function, k, diagnostics = diagnostics)
         } else {
-            fit <- mr.raps.overdispersed.robust(b_exp, b_out, se_exp, se_out, loss.function, k, suppress.warning = suppress.warning, diagnosis = diagnosis, pruning = pruning)
+            fit <- mr.raps.overdispersed.robust(b_exp, b_out, se_exp, se_out, loss.function, k, suppress.warning = suppress.warning, diagnostics = diagnostics, pruning = pruning)
         }
     }
 
@@ -98,7 +98,7 @@ mr.raps.v1 <- function(b_exp, b_out, se_exp, se_out,
                 print(paste0("Bootstrap: ", round(b / B * 100), "% finished."))
             }
             s <- sample(1:length(b_exp), replace = TRUE)
-            fit.bootstrap[[b]] <- tryCatch(unlist(mr.raps.v1(b_exp[s], b_out[s], se_exp[s], se_out[s], over.dispersion, loss.function, se.method = "sandwich", k = k, suppress.warning = TRUE)), error = function(e) {print(e); NA})
+            fit.bootstrap[[b]] <- tryCatch(unlist(mr.raps.mle(b_exp[s], b_out[s], se_exp[s], se_out[s], over.dispersion, loss.function, se.method = "sandwich", k = k, suppress.warning = TRUE)), error = function(e) {print(e); NA})
         }
         fit.bootstrap <- data.frame(do.call(rbind, fit.bootstrap))
         fit <- c(fit,
@@ -109,17 +109,17 @@ mr.raps.v1 <- function(b_exp, b_out, se_exp, se_out,
     fit
 }
 
-#' \code{mr.raps.all}: Quick analysis with all six v1 methods
+#' \code{mr.raps.all}: Quick analysis with all six MLE methods
 #'
-#' @describeIn mr.raps.v1
+#' @describeIn mr.raps.mle
 #'
 #' @export
 #'
-mr.raps.v1.all <- function(b_exp, b_out, se_exp, se_out) {
+mr.raps.mle.all <- function(b_exp, b_out, se_exp, se_out) {
     res <- data.frame()
     for (over.dispersion in c(FALSE, TRUE)) {
         for (loss.function in c("l2", "huber", "tukey")) {
-            out <- mr.raps.v1(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function)
+            out <- mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function)
             out <- data.frame(out)
             out$over.dispersion <- over.dispersion
             out$loss.function <- loss.function
@@ -131,13 +131,13 @@ mr.raps.v1.all <- function(b_exp, b_out, se_exp, se_out) {
 
 #' \code{mr.raps.simple}: No overdispersion, l2 loss
 #'
-#' @describeIn mr.raps.v1
+#' @describeIn mr.raps.mle
 #'
 #' @export
 #' @importFrom nortest ad.test
 #' @import stats graphics
 #'
-mr.raps.simple <- function(b_exp, b_out, se_exp, se_out, diagnosis = FALSE) {
+mr.raps.simple <- function(b_exp, b_out, se_exp, se_out, diagnostics = FALSE) {
 
     profile.loglike <- function(beta) {
         - (1/2) * sum((b_out - b_exp * beta)^2 / (se_out^2 + se_exp^2 * beta^2)) # - (1/2) * sum(log(se_out^2 + beta^2 * se_exp^2))
@@ -157,7 +157,7 @@ mr.raps.simple <- function(b_exp, b_out, se_exp, se_out, diagnosis = FALSE) {
     dif.var <- se_out^2 + beta.hat^2 * se_exp^2 # + (score.var / I^2 + 2 * beta.hat^2 * se_exp^2) * (b_exp^2 - se_exp^2)
     chi.sq.test <- sum((dif / sqrt(dif.var))^2)
 
-    if (diagnosis) {
+    if (diagnostics) {
         std.resid <- (b_out - b_exp * beta.hat) / sqrt((se_out^2 + beta.hat^2 * se_exp^2))
         par(mfrow = c(1, 2))
         qqnorm(std.resid)
@@ -189,7 +189,7 @@ mr.raps.simple <- function(b_exp, b_out, se_exp, se_out, diagnosis = FALSE) {
                 beta.p.value = min(1, 2 * (1 - pnorm(abs(beta.hat) / sqrt(score.var/I^2)))),
                 naive.se = sqrt(1/I),
                 chi.sq.test = chi.sq.test)
-    if (diagnosis) {
+    if (diagnostics) {
         out$std.resid <- std.resid
         out$beta.hat.loo <- beta.hat.loo
     }
@@ -198,13 +198,13 @@ mr.raps.simple <- function(b_exp, b_out, se_exp, se_out, diagnosis = FALSE) {
 
 #' \code{mr.raps.overdispersed}: Overdispersion, l2 loss
 #'
-#' @describeIn mr.raps.v1
+#' @describeIn mr.raps.mle
 #'
 #' @import stats graphics
 #' @importFrom nortest ad.test
 #' @export
 #'
-mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization = c("simple", "mode"), suppress.warning = FALSE, diagnosis = FALSE, pruning = TRUE, niter = 20, tol = .Machine$double.eps^0.5) {
+mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization = c("simple", "mode"), suppress.warning = FALSE, diagnostics = FALSE, pruning = TRUE, niter = 20, tol = .Machine$double.eps^0.5) {
 
     initialization <- match.arg(initialization, c("simple", "mode"))
     if (pruning) {
@@ -297,7 +297,7 @@ mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization =
 
     asymp.var <- solve(I) %*% score.var %*% t(solve(I))
 
-    if (diagnosis) {
+    if (diagnostics) {
         std.resid <- (b_out - b_exp * beta.hat) / sqrt((tau2.hat + se_out^2 + beta.hat^2 * se_exp^2))
         par(mfrow = c(1, 2))
         qqnorm(std.resid)
@@ -329,7 +329,7 @@ mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization =
                 tau2.se = sqrt(asymp.var[2, 2]),
                 beta.p.value = min(1, 2 * (1 - pnorm(abs(beta.hat) / sqrt(asymp.var[1, 1])))))
 
-    if (diagnosis) {
+    if (diagnostics) {
         out$std.resid <- std.resid
         out$beta.hat.loo <- beta.hat.loo
     }
@@ -340,13 +340,13 @@ mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization =
 
 #' \code{mr.raps.simple.robust}: No overdispersion, robust loss
 #'
-#' @describeIn mr.raps.v1
+#' @describeIn mr.raps.mle
 #'
 #' @import stats graphics
 #' @importFrom nortest ad.test
 #' @export
 #'
-mr.raps.simple.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = c("huber", "tukey"), k = switch(loss.function[1], huber = 1.345, tukey = 4.685), diagnosis = FALSE) {
+mr.raps.simple.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = c("huber", "tukey"), k = switch(loss.function[1], huber = 1.345, tukey = 4.685), diagnostics = FALSE) {
 
     loss.function <- match.arg(loss.function, c("huber", "tukey"))
     rho <- switch(loss.function,
@@ -377,7 +377,7 @@ mr.raps.simple.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = 
     dif.var <- se_out^2 + beta.hat^2 * se_exp^2 # + (score.var / I^2 + 2 * beta.hat^2 * se_exp^2) * (b_exp^2 - se_exp^2)
     chi.sq.test <- sum((dif / sqrt(dif.var))^2)
 
-    if (diagnosis) {
+    if (diagnostics) {
         std.resid <- (b_out - b_exp * beta.hat) / sqrt((se_out^2 + beta.hat^2 * se_exp^2))
         par(mfrow = c(1, 2))
         qqnorm(std.resid)
@@ -411,7 +411,7 @@ mr.raps.simple.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = 
                 chi.sq.test = chi.sq.test,
                 beta.p.value = min(1, 2 * (1 - pnorm(abs(beta.hat) / sqrt(asymp.var[1, 1])))))
 
-    if (diagnosis) {
+    if (diagnostics) {
         out$std.resid <- std.resid
         out$beta.hat.loo <- beta.hat.loo
     }
@@ -422,13 +422,13 @@ mr.raps.simple.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = 
 
 #' \code{mr.raps.overdispersed.robust}: Overdispersed, robust loss
 #'
-#' @describeIn mr.raps.v1
+#' @describeIn mr.raps.mle
 #'
 #' @import stats graphics
 #' @importFrom nortest ad.test
 #' @export
 #'
-mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = c("huber", "tukey"), k = switch(loss.function[1], huber = 1.345, tukey = 4.685), initialization = c("l2", "mode"), suppress.warning = FALSE, diagnosis = FALSE, pruning = TRUE, niter = 20, tol = .Machine$double.eps^0.5) {
+mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.function = c("huber", "tukey"), k = switch(loss.function[1], huber = 1.345, tukey = 4.685), initialization = c("l2", "mode"), suppress.warning = FALSE, diagnostics = FALSE, pruning = TRUE, niter = 20, tol = .Machine$double.eps^0.5) {
 
     loss.function <- match.arg(loss.function, c("huber", "tukey"))
     initialization <- match.arg(initialization, c("l2", "mode"))
@@ -520,7 +520,7 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
 
     asymp.var <- solve(I) %*% score.var %*% t(solve(I))
 
-    if (diagnosis) {
+    if (diagnostics) {
         std.resid <- (b_out - b_exp * beta.hat) / sqrt((tau2.hat + se_out^2 + beta.hat^2 * se_exp^2))
         par(mfrow = c(1, 2))
         qqnorm(std.resid)
@@ -551,7 +551,7 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
                 beta.se = sqrt(asymp.var[1, 1]),# / sqrt(efficiency),
                 tau2.se = sqrt(asymp.var[2, 2]),
                 beta.p.value = min(1, 2 * (1 - pnorm(abs(beta.hat) / sqrt(asymp.var[1, 1])))))# / sqrt(efficiency),
-    if (diagnosis) {
+    if (diagnostics) {
         out$std.resid <- std.resid
         out$beta.hat.loo <- beta.hat.loo
     }
@@ -564,7 +564,7 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
 ## #'
 ## #' This function implements the modified 2nd order weighted procedure.
 ## #'
-## #' @inheritParams mr.raps.v1
+## #' @inheritParams mr.raps.mle
 ## #'
 ## #' @references Bowden, Jack, M. Fabiola Del Greco, Cosetta Minelli, Debbie Lawlor, Nuala Sheehan, John Thompson, and George Davey Smith. "Improving the accuracy of two-sample summary data Mendelian randomization: moving beyond the NOME assumption." bioRxiv (2017): 159442.
 ## #'

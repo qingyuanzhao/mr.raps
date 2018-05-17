@@ -5,7 +5,7 @@
 \title{Fit a Gaussian mixture deconvolution model}
 \usage{
 fit.mixture.model(z, n = 2, ntry = 10, force.mu.zero = TRUE,
-  diagnosis = FALSE)
+  diagnostics = FALSE)
 }
 \arguments{
 \item{z}{A vector of z-scores.}
@@ -16,7 +16,7 @@ fit.mixture.model(z, n = 2, ntry = 10, force.mu.zero = TRUE,
 
 \item{force.mu.zero}{Should the means be forced to zero?}
 
-\item{diagnosis}{Logical indicator for showing diagnostic plots.}
+\item{diagnostics}{Logical indicator for showing diagnostic plots.}
 }
 \value{
 A list of \code{p} (mixture proportion), \code{mu} (mean), \code{sigma} (standard deviation).

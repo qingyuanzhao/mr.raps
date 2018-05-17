@@ -4,17 +4,17 @@
 \alias{mr.raps.shrinkage}
 \alias{print.mr.raps}
 \alias{plot.mr.raps}
-\title{Main function (for RAPS with shrinkage)}
+\title{Main function for RAPS (shrinkage weights)}
 \usage{
 mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
   loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2
   = 2, huber = 1.345, tukey = 4.685), shrinkage = TRUE, prior.param = NULL,
-  diagnosis = FALSE, se.method = c("sandwich", "bootstrap"),
+  diagnostics = FALSE, se.method = c("sandwich", "bootstrap"),
   num.init = 10)
 
-\method{print}{mr.raps}(out)
+\method{print}{mr.raps}(x, ...)
 
-\method{plot}{mr.raps}(out)
+\method{plot}{mr.raps}(x, ...)
 }
 \arguments{
 \item{b_exp}{A vector of SNP effects on the exposure variable, usually obtained from a GWAS.}
@@ -35,21 +35,23 @@ mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
 
 \item{prior.param}{Parameters of the Gaussian spike-and-slab prior}
 
-\item{diagnosis}{Should the function returns diagnostic plots and results? Default is FALSE}
+\item{diagnostics}{Should the function returns diagnostic plots and results? Default is FALSE}
 
 \item{se.method}{How should the standard error be estimated? Either by sandwich variance formula (default and recommended) or the bootstrap.}
 
 \item{num.init}{Number of initializations.}
 
-\item{out}{a \code{mr.raps} object}
+\item{x}{a \code{mr.raps} object}
+
+\item{...}{further arguments (not supported)}
 }
 \description{
-Main function (for RAPS with shrinkage)
+Main function for RAPS (shrinkage weights)
 }
 \details{
-\code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.v1} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.v1}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.v1}. See Efron and Hinkley (1978) referenced below.
+\code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle}. See Efron and Hinkley (1978) referenced below.
 
-Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.v1} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization.
+Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.mle} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization.
 }
 \section{Methods (by generic)}{
 \itemize{
@@ -62,13 +64,19 @@ Because the estimating equations are highly non-linear, it is possible that ther
 
 require(mr.raps)
 data(lipid.cad)
-data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+data <- subset(lipid.cad, lipid == "hdl" & restrict &
+gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
 z <- data$beta.exposure / data$se.exposure
 prior.param <- fit.mixture.model(z)
 
 ## Results
-mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
-mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
+mr.raps.shrinkage(data$beta.exposure, data$beta.outcome,
+data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
+\donttest{
+mr.raps.shrinkage(data$beta.exposure, data$beta.outcome,
+data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE,
+prior.param = prior.param)
+}
 
 }
 \references{
