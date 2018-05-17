@@ -21,3 +21,11 @@ This function calls \code{mr.raps.shrinkage} with \code{overdispersion = TRUE}, 
 \item se.outcome
 }
 }
+\examples{
+
+require(mr.raps)
+data(lipid.cad)
+data <- subset(lipid.cad, lipid == "hdl" & restrict & gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+mr.raps(data)
+
+}
