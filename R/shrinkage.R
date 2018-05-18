@@ -429,6 +429,8 @@ plot.mr.raps <- function(x, ...) {
 #'
 #' @examples
 #'
+#' mr.raps(bmi.sbp)
+#'
 #' \donttest{
 #' require(mr.raps)
 #' data(lipid.cad)

@@ -25,6 +25,8 @@ This function calls \code{mr.raps.shrinkage} with \code{overdispersion = TRUE}, 
 }
 \examples{
 
+mr.raps(bmi.sbp)
+
 \donttest{
 require(mr.raps)
 data(lipid.cad)
