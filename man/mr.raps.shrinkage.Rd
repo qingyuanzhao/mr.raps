@@ -8,7 +8,7 @@
 \usage{
 mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
   loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2
-  = 2, huber = 1.345, tukey = 4.685), shrinkage = TRUE, prior.param = NULL,
+  = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL,
   diagnostics = FALSE, se.method = c("sandwich", "bootstrap"),
   num.init = 10)
 
@@ -31,7 +31,7 @@ mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
 
 \item{k}{Threshold parameter in the Huber and Tukey loss functions.}
 
-\item{shrinkage}{If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy.}
+\item{shrinkage}{If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy. If TRUE, \code{prior.param} must be provided.}
 
 \item{prior.param}{Parameters of the Gaussian spike-and-slab prior}
 

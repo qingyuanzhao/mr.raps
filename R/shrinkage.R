@@ -154,7 +154,7 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #' Main function for RAPS (shrinkage weights)
 #'
 #' @inheritParams mr.raps.mle
-#' @param shrinkage If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy.
+#' @param shrinkage If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy. If TRUE, \code{prior.param} must be provided.
 #' @param prior.param Parameters of the Gaussian spike-and-slab prior
 #' @param num.init Number of initializations.
 #'
@@ -189,7 +189,7 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #'
 #' @importFrom rootSolve multiroot
 #'
-mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = TRUE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), num.init = 10) {
+mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), num.init = 10) {
 
     se.method <- match.arg(se.method)
     if (se.method == "bootstrap") {
@@ -206,7 +206,10 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
             tau2.hat[b] <- res$tau2.hat
         }
         hist(beta.hat)
-        return(list(beta.hat = mean(beta.hat), beta.se = sd(beta.hat), tau2.hat = mean(tau2.hat), tau2.se = sd(tau2.hat)))
+        return(list(beta.hat = mean(beta.hat, na.rm = TRUE),
+                    beta.se = sd(beta.hat, na.rm = TRUE),
+                    tau2.hat = mean(tau2.hat, na.rm = TRUE),
+                    tau2.se = sd(tau2.hat, na.rm = TRUE)))
     }
 
     loss.function <- match.arg(loss.function, c("l2", "huber", "tukey"))
@@ -280,7 +283,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         res <- mr.raps.simple(b_exp, b_out, se_exp, se_out)
         init.param <- res$beta.hat
     } else {
-        res <- mr.raps.overdispersed(b_exp, b_out, se_exp, se_out, suppress.warning = TRUE)
+        res <- mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function, suppress.warning = TRUE)
         init.param <- c(res$beta.hat, res$tau2.hat)
     }
 
@@ -293,7 +296,11 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         if ((over.dispersion) && (!is.na(res[[i]]$root[2])) && (res[[i]]$root[2] > median(se_out) * 10)) {
             beta[i] <- NA
         } else {
-            beta[i] <- res[[i]]$root[1]
+            if (is.na(res[[i]]$estim.precis)) {
+                beta[i] <- NA
+            } else {
+                beta[i] <- res[[i]]$root[1]
+            }
         }
     }
     j <- which.min(abs(beta - beta.init[1]))
@@ -306,7 +313,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
 
     for(i in 1:num.init) {
         if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 100 * abs(beta[j] - beta.init[1])) {
-            warning(paste("The estimating equations might have another finite root. The smallest root is beta =", beta[j], "and the other root is beta =", beta[i], "and the initialization is beta =", beta.init[1]))
+            warning(paste("The estimating equations might have another finite root. The closest root is beta =", beta[j], "and the other root is beta =", beta[i], "and the initialization is beta =", beta.init[1]))
         }
         if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 5 * abs(beta[j] - beta.init[1])) {
             warning(paste("Found two very close solutions: beta =", beta[j], "and", beta[i]))
