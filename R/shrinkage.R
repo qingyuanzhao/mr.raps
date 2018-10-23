@@ -157,7 +157,7 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #' @param shrinkage If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy. If TRUE, \code{prior.param} must be provided.
 #' @param prior.param Parameters of the Gaussian spike-and-slab prior
 #' @param num.init Number of initializations.
-#' @param multiple.root.warning How to handle multiple roots of the estimating equations? When this happens, the results of \code{mr.raps.shrinkage} are less reliable. This parameter can take three values: 0---nothing will be done; 1---a warning is given; 2---an error is given. Default is 2.
+#' @param multiple.root.warning How to handle multiple roots of the estimating equations? When this happens, the results of \code{mr.raps.shrinkage} are less reliable. This parameter can take three values: 0---nothing will be done; 1---a warning is given; 2---an error is given. Default is 1.
 #'
 #' @details
 #' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle}. See Efron and Hinkley (1978) referenced below.

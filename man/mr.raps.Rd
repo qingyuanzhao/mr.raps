@@ -4,12 +4,14 @@
 \alias{mr.raps}
 \title{Recommended \code{mr.raps} procedure}
 \usage{
-mr.raps(data, diagnostics = TRUE)
+mr.raps(data, diagnostics = TRUE, ...)
 }
 \arguments{
 \item{data}{A data frame (see Details)}
 
 \item{diagnostics}{Logical indicator for showing diagnostic plots.}
+
+\item{...}{Additional parameters to be passed to \code{mr.raps.shrinkage}.}
 }
 \description{
 Recommended \code{mr.raps} procedure

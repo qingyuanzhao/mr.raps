@@ -10,7 +10,7 @@ mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
   loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2
   = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL,
   diagnostics = FALSE, se.method = c("sandwich", "bootstrap"),
-  num.init = 10)
+  num.init = 10, multiple.root.warning = 1)
 
 \method{print}{mr.raps}(x, ...)
 
@@ -40,6 +40,8 @@ mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
 \item{se.method}{How should the standard error be estimated? Either by sandwich variance formula (default and recommended) or the bootstrap.}
 
 \item{num.init}{Number of initializations.}
+
+\item{multiple.root.warning}{How to handle multiple roots of the estimating equations? When this happens, the results of \code{mr.raps.shrinkage} are less reliable. This parameter can take three values: 0---nothing will be done; 1---a warning is given; 2---an error is given. Default is 1.}
 
 \item{x}{a \code{mr.raps} object}
 
