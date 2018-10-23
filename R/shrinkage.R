@@ -231,6 +231,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     get.gamma.hat <- function(beta, tau2, deriv = c("0", "beta", "tau2")) {
         deriv <- match.arg(deriv, c("0", "beta", "tau2"))
         gamma.mle <- (b_exp/ se_exp^2 + beta * b_out/ (se_out^2 + tau2)) / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+        gamma.mle[se_exp == 0] <- b_exp
         if (deriv == "0") {
             if (shrinkage) {
                 a <- posterior.mean(gamma.mle / se_exp,
