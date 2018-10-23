@@ -157,6 +157,7 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #' @param shrinkage If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy. If TRUE, \code{prior.param} must be provided.
 #' @param prior.param Parameters of the Gaussian spike-and-slab prior
 #' @param num.init Number of initializations.
+#' @param multiple.root.warning How to handle multiple roots of the estimating equations? When this happens, the results of \code{mr.raps.shrinkage} are less reliable. This parameter can take three values: 0---nothing will be done; 1---a warning is given; 2---an error is given. Default is 2.
 #'
 #' @details
 #' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle}. See Efron and Hinkley (1978) referenced below.
@@ -189,7 +190,7 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #'
 #' @importFrom rootSolve multiroot
 #'
-mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), num.init = 10) {
+mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), num.init = 10, multiple.root.warning = 2) {
 
     se.method <- match.arg(se.method)
     if (se.method == "bootstrap") {
@@ -311,13 +312,17 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         ## estimated.param <- c(res$root, 0)
     }
 
-    for(i in 1:num.init) {
-        if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 100 * abs(beta[j] - beta.init[1])) {
-            warning(paste("The estimating equations might have another finite root. The closest root is beta =", beta[j], "and the other root is beta =", beta[i], "and the initialization is beta =", beta.init[1]))
-        }
-        if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 5 * abs(beta[j] - beta.init[1])) {
-            warning(paste("Found two very close solutions: beta =", beta[j], "and", beta[i]))
-            return(list(beta.hat = NA, beta.se = NA, tau2.hat = NA, tau2.se = NA))
+    if (multiple.root.warning > 0) {
+        for(i in 1:num.init) {
+            if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 100 * abs(beta[j] - beta.init[1])) {
+                warning(paste("The estimating equations might have another finite root. The closest root is beta =", beta[j], "and the other root is beta =", beta[i], "and the initialization is beta =", beta.init[1]))
+            }
+            if (multiple.root.warning > 1) {
+                if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 5 * abs(beta[j] - beta.init[1])) {
+                    stop(paste("Found two very close solutions: beta =", beta[j], "and", beta[i]))
+                    ## return(list(beta.hat = NA, beta.se = NA, tau2.hat = NA, tau2.se = NA))
+                }
+            }
         }
     }
     res <- res[[j]]
@@ -414,6 +419,7 @@ plot.mr.raps <- function(x, ...) {
 #'
 #' @param data A data frame (see Details)
 #' @param diagnostics Logical indicator for showing diagnostic plots.
+#' @param ... Additional parameters to be passed to \code{mr.raps.shrinkage}.
 #'
 #' @details
 #' This function calls \code{mr.raps.shrinkage} with \code{overdispersion = TRUE}, \code{loss.function = "huber"}, \code{shrinkage = TRUE}. The input data frame should contain the following variables:
@@ -439,9 +445,9 @@ plot.mr.raps <- function(x, ...) {
 #' mr.raps(data)
 #' }
 #'
-mr.raps <- function(data, diagnostics = TRUE) {
+mr.raps <- function(data, diagnostics = TRUE, ...) {
     prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
-    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
+    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param, ...)
 
     if (diagnostics) {
         cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))
