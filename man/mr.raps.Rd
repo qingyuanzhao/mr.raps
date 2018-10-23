@@ -11,7 +11,7 @@ mr.raps(data, diagnostics = TRUE, ...)
 
 \item{diagnostics}{Logical indicator for showing diagnostic plots.}
 
-\item{...}{Additional parameters to be passed to \code{mr.raps.shrinkage}.}
+\item{...}{Additional parameters to be passed to \code{mr.raps.shrinkage} (default is \code{shrinkage=FALSE}).}
 }
 \description{
 Recommended \code{mr.raps} procedure

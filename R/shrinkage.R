@@ -419,7 +419,7 @@ plot.mr.raps <- function(x, ...) {
 #'
 #' @param data A data frame (see Details)
 #' @param diagnostics Logical indicator for showing diagnostic plots.
-#' @param ... Additional parameters to be passed to \code{mr.raps.shrinkage}.
+#' @param ... Additional parameters to be passed to \code{mr.raps.shrinkage} (default is \code{shrinkage=FALSE}).
 #'
 #' @details
 #' This function calls \code{mr.raps.shrinkage} with \code{overdispersion = TRUE}, \code{loss.function = "huber"}, \code{shrinkage = TRUE}. The input data frame should contain the following variables:
@@ -447,7 +447,7 @@ plot.mr.raps <- function(x, ...) {
 #'
 mr.raps <- function(data, diagnostics = TRUE, ...) {
     prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
-    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param, ...)
+    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", prior.param = prior.param, ...)
 
     if (diagnostics) {
         cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))
