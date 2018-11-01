@@ -504,8 +504,8 @@ mr.raps.publish <- function(data) {
                            beta.hat = c(out1$beta.hat, out2$beta.hat),
                            weight.method = rep(c("MLE", "Shrinkage")))
     out.plot <- ggplot(df) + aes(x = w, y = t) + geom_point(aes(shape = (pval.selection < 5e-8), color = (pval.selection < 5e-8), size = (pval.selection < 5e-8)), alpha = 0.7)
-    out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 1, aes(label = paste("Estimated effect:", as.character(signif(beta.hat, 2)))), data = df.label, size = 2)
-    out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 0.8, aes(label = paste("Heterogeneity p-value:", as.character(signif(p, 2)))), data = df.label, size = 2)
+    out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 1, aes(label = paste("Estimated effect:", as.character(signif(beta.hat, 2)))), data = df.label, size = 5)
+    out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 0.8, aes(label = paste("Heterogeneity p-value:", as.character(signif(p, 2)))), data = df.label, size = 5)
     out.plot <- out.plot + coord_cartesian(ylim = range(df$t) * 1.1) + facet_grid(weight.method ~ .) + geom_smooth(method = "loess", span = 1/3) + xlab("Absolute weight") + ylab("Standardized residual") + scale_shape_discrete(guide = FALSE) + scale_color_discrete(guide = FALSE) + scale_size_discrete(guide = FALSE, range = c(1.5, 2.5)) + theme_bw(base_size = 18)
 
     qhnorm <- function(p) {
