@@ -34,7 +34,7 @@ require(mr.raps)
 data(lipid.cad)
 data <- subset(lipid.cad, lipid == "hdl" & restrict &
 gwas.selection == "teslovich_2010" &
-gwas.outcome == "cardiogramplusc4d")
+gwas.outcome == "cardiogramplusc4d_1000genome")
 z <- data$beta.exposure / data$se.exposure
 prior.param <- fit.mixture.model(z)
 

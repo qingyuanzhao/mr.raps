@@ -4,7 +4,7 @@
 \name{lipid.cad}
 \alias{lipid.cad}
 \title{Effect of blood lipids (LDL cholesterol, HDL cholesterol, Triglycerides) on Cardiovascular disease risk}
-\format{A \code{data.frame} with 26235 rows and 24 variables.}
+\format{A \code{data.frame} with 10168 rows and 24 variables.}
 \usage{
 data(lipid.cad)
 }
@@ -13,8 +13,8 @@ This dataset is created from four genome-wide association studies:
 \enumerate{
 \item A 2010 GWAS of blood lipids (Teslovich et al.\, 2010), named "teslovich_2010" in the dataset.
 \item The MetaboChip (MC) data in a 2013 GWAS of blood lipids (Willer et al.\, 2013), named "mc_2013" in the dataset.
-\item The CARDIoGRAMplusC4D meta-analysis of coronary artery disease (CARDIoGRAMplusC4D Consortium, 2013), named "cardiogramplusc4d" in the dataset.
-\item The UK BioBank GWAS of self reported heart attach (interim release by the Neale lab), named "ukbb_self_report_heart" in the dataset.
+\item The CARDIoGRAMplusC4D meta-analysis of coronary artery disease (CARDIoGRAMplusC4D Consortium, 20135, named "cardiogramplusc4d_1000genome" in the dataset.
+\item The UK BioBank GWAS of self reported heart attach (interim release by the Neale lab), named "ukbb_6150_round2" in the dataset.
 }
 }
 \details{

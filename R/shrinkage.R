@@ -109,7 +109,7 @@ fit.mixture.model <- function(z, n = 2, ntry = 10, force.mu.zero = TRUE, diagnos
 #' data(lipid.cad)
 #' data <- subset(lipid.cad, lipid == "hdl" & restrict &
 #' gwas.selection == "teslovich_2010" &
-#' gwas.outcome == "cardiogramplusc4d")
+#' gwas.outcome == "cardiogramplusc4d_1000genome")
 #' z <- data$beta.exposure / data$se.exposure
 #' prior.param <- fit.mixture.model(z)
 #'
@@ -173,7 +173,8 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #' require(mr.raps)
 #' data(lipid.cad)
 #' data <- subset(lipid.cad, lipid == "hdl" & restrict &
-#' gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+#' gwas.selection == "teslovich_2010" &
+#' gwas.outcome == "cardiogramplusc4d_1000genome")
 #' z <- data$beta.exposure / data$se.exposure
 #' prior.param <- fit.mixture.model(z)
 #'
@@ -442,7 +443,8 @@ plot.mr.raps <- function(x, ...) {
 #' require(mr.raps)
 #' data(lipid.cad)
 #' data <- subset(lipid.cad, lipid == "hdl" & restrict &
-#' gwas.selection == "teslovich_2010" & gwas.outcome == "cardiogramplusc4d")
+#' gwas.selection == "teslovich_2010" &
+#' gwas.outcome == "cardiogramplusc4d_1000genome")
 #' mr.raps(data)
 #' }
 #'
@@ -452,12 +454,12 @@ mr.raps <- function(data, diagnostics = TRUE, ...) {
 
     if (diagnostics) {
         cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))
-        cat(paste0("Estimated pleiotropy variance: ", signif(out$tau2.hat, 3), ", standard error: ", signif(out$tau2.se, 3), ", p-value: ", signif(pnorm(-abs(out$tau2.hat / out$tau2.se)) * 2, 3), ".\n"))
+        cat(paste0("Estimated overdispersion variance: ", signif(out$tau2.hat, 3), ", standard error: ", signif(out$tau2.se, 3), ", p-value: ", signif(pnorm(-abs(out$tau2.hat / out$tau2.se)) * 2, 3), ".\n"))
 
         cat(paste0("ANOVA test: are the weights and residuals independent? \n"))
         weights <- out$gamma.hat.z
         std.resids <- out$t
-        df <- max(round(length(weights) / 50), 3)
+        df <- max(round(length(weights) / 20), 3)
         lm.test <- lm(std.resids ~ bs(weights, df) - 1)
         print(anova(lm.test))
 

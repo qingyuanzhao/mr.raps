@@ -48,8 +48,8 @@
 #' \enumerate{
 #' \item A 2010 GWAS of blood lipids (Teslovich et al.\, 2010), named "teslovich_2010" in the dataset.
 #' \item The MetaboChip (MC) data in a 2013 GWAS of blood lipids (Willer et al.\, 2013), named "mc_2013" in the dataset.
-#' \item The CARDIoGRAMplusC4D meta-analysis of coronary artery disease (CARDIoGRAMplusC4D Consortium, 2013), named "cardiogramplusc4d" in the dataset.
-#' \item The UK BioBank GWAS of self reported heart attach (interim release by the Neale lab), named "ukbb_self_report_heart" in the dataset.
+#' \item The CARDIoGRAMplusC4D meta-analysis of coronary artery disease (CARDIoGRAMplusC4D Consortium, 20135, named "cardiogramplusc4d_1000genome" in the dataset.
+#' \item The UK BioBank GWAS of self reported heart attach (interim release by the Neale lab), named "ukbb_6150_round2" in the dataset.
 #' }
 #'
 #' \code{lipid.cad} contains in total 24 sub-datasets, each is suitable for a Mendelian randomization study. To obtain a sub-dataset, you must decide on
@@ -65,7 +65,7 @@
 #'
 #' @usage data(lipid.cad)
 #'
-#' @format A \code{data.frame} with 26235 rows and 24 variables.
+#' @format A \code{data.frame} with 10168 rows and 24 variables.
 #'
 #' @keywords datasets
 #'
