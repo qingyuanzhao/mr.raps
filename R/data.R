@@ -65,7 +65,7 @@
 #'
 #' @usage data(lipid.cad)
 #'
-#' @format A \code{data.frame} with 10168 rows and 24 variables.
+#' @format A \code{data.frame} with 12026 rows and 24 variables.
 #'
 #' @keywords datasets
 #'
