@@ -374,15 +374,18 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     gamma.hat.z <- gamma.hat / sqrt(v)
     t <- t * sign(gamma.hat.z)
     gamma.hat.z <- abs(gamma.hat.z)
-    ## plot(gamma.hat.z, t, xlab = "Weight", ylab = "Standardized residual")
-    ## plot(rank(- gamma.hat.z), t, xlab = "Rank of weight", ylab = "Standardized residual")
-    ## print("Test of independence:")
-    ## print(summary(lm(t ~ poly(gamma.hat.z, 2) - 1)))
     out <- list(beta.hat = beta, tau2.hat = tau2, beta.se = beta.se, tau2.se = tau2.se, t = t, gamma.hat.z = gamma.hat.z)
     class(out) <- "mr.raps"
 
     if (diagnostics) {
         plot(out)
+        ## Heterogeneity test
+        weights <- out$gamma.hat.z
+        std.resids <- out$t
+        df <- max(round(length(weights) / 20), 3)
+        lm.test <- lm(std.resids ~ bs(weights, df) - 1)
+        hetero.pval <- anova(lm.test)[[5]][1]
+        out$hetero.pval <- hetero.pval
     }
     out
 
