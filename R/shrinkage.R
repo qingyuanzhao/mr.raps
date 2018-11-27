@@ -380,7 +380,12 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     if (diagnostics) {
         plot(out)
         ## Heterogeneity test
-        weights <- out$gamma.hat.z
+
+        ## Use MLE instead of shrinked gamma.hat usually has more power
+        gamma.mle <- abs((b_exp/ se_exp^2 + beta * b_out/ (se_out^2 + tau2)) / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2)))
+        gamma.mle[se_exp == 0] <- abs(b_exp)
+
+        weights <- gamma.mle
         std.resids <- out$t
         df <- max(round(length(weights) / 20), 3)
         lm.test <- lm(std.resids ~ bs(weights, df) - 1)
@@ -479,10 +484,12 @@ mr.raps <- function(data, diagnostics = TRUE, ...) {
 #'
 #' @import ggplot2 splines gridExtra
 #'
-mr.raps.publish <- function(data) {
+mr.raps.publish <- function(data, weight.option = c("both", "MLE", "shrinkage")) {
 
     ## require(splines)
     ## require(ggplot2)
+
+    weight.option <- match.arg(weight.option)
 
     prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
     out1 <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
@@ -500,15 +507,37 @@ mr.raps.publish <- function(data) {
     lm.test <- lm(std.resids ~ bs(weights, df) - 1)
     p2 <- anova(lm.test)[[5]][1]
 
-    df <- data.frame(SNP = rep(data$SNP, 2),
-                     t = c(out1$t, out2$t),
-                     w = c(out1$gamma.hat.z, out2$gamma.hat.z),
-                     pval.selection = rep(data$pval.selection, 2),
-                     weight.method = rep(c("MLE", "Shrinkage"), each = nrow(data)))
-    df.label <- data.frame(p = c(p1, p2),
-                           beta.hat = c(out1$beta.hat, out2$beta.hat),
-                           weight.method = rep(c("MLE", "Shrinkage")))
+    if (weight.option == "both"){
+        df <- data.frame(SNP = rep(data$SNP, 2),
+                         t = c(out1$t, out2$t),
+                         w = c(out1$gamma.hat.z, out2$gamma.hat.z),
+                         pval.selection = rep(data$pval.selection, 2),
+                         weight.method = rep(c("MLE", "Shrinkage"), each = nrow(data)))
+        df.label <- data.frame(p = c(p1, p2),
+                               beta.hat = c(out1$beta.hat, out2$beta.hat),
+                               weight.method = rep(c("MLE", "Shrinkage")))
+    } else if (weight.option == "MLE") {
+        df <- data.frame(SNP = data$SNP,
+                         t = out1$t,
+                         w = out1$gamma.hat.z,
+                         pval.selection = data$pval.selection,
+                         weight.method = rep("MLE", each = nrow(data)))
+        df.label <- data.frame(p = p1,
+                               beta.hat = out1$beta.hat,
+                               weight.method = "MLE")
+    } else if (weight.option == "shrinkage") {
+        df <- data.frame(SNP = data$SNP,
+                         t = out2$t,
+                         w = out2$gamma.hat.z,
+                         pval.selection = data$pval.selection,
+                         weight.method = rep("Shrinkage", each = nrow(data)))
+        df.label <- data.frame(p = p2,
+                               beta.hat = out2$beta.hat,
+                               weight.method = "Shrinkage")
+    }
+
     out.plot <- ggplot(df) + aes(x = w, y = t) + geom_point(aes(shape = (pval.selection < 5e-8), color = (pval.selection < 5e-8), size = (pval.selection < 5e-8)), alpha = 0.7)
+
     out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 1, aes(label = paste("Estimated effect:", as.character(signif(beta.hat, 2)))), data = df.label, size = 5)
     out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 0.8, aes(label = paste("Heterogeneity p-value:", as.character(signif(p, 2)))), data = df.label, size = 5)
     out.plot <- out.plot + coord_cartesian(ylim = range(df$t) * 1.1) + facet_grid(weight.method ~ .) + geom_smooth(method = "loess", span = 1/3) + xlab("Absolute weight") + ylab("Standardized residual") + scale_shape_discrete(guide = FALSE) + scale_color_discrete(guide = FALSE) + scale_size_discrete(guide = FALSE, range = c(1.5, 2.5)) + theme_bw(base_size = 18)
