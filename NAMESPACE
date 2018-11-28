@@ -3,6 +3,7 @@
 S3method(plot,mr.raps)
 S3method(print,mr.raps)
 export(fit.mixture.model)
+export(modal.plot)
 export(mr.raps)
 export(mr.raps.mle)
 export(mr.raps.mle.all)
