@@ -119,7 +119,9 @@ mr.raps.mle.all <- function(b_exp, b_out, se_exp, se_out) {
     res <- data.frame()
     for (over.dispersion in c(FALSE, TRUE)) {
         for (loss.function in c("l2", "huber", "tukey")) {
-            out <- mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function)
+            out <- mr.raps.mle(b_exp, b_out, se_exp, se_out,
+                               over.dispersion, loss.function,
+                               suppress.warning = 0.5)
             out <- data.frame(out)
             out$over.dispersion <- over.dispersion
             out$loss.function <- loss.function
@@ -277,12 +279,13 @@ mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization =
         }
     }
 
-    if (abs(beta.hat.old - beta.hat) / abs(beta.hat + 1e-10) + abs(tau2.hat.old - tau2.hat) / abs(tau2.hat + 1e-10) > tol && (!suppress.warning)) {
+    if (abs(beta.hat.old - beta.hat) / abs(beta.hat + 1e-10) + abs(tau2.hat.old - tau2.hat) / abs(tau2.hat + 1e-10) > tol && (suppress.warning <= 0.5)) {
         warning("Did not converge when solving the estimating equations. Consider to increase niter or decrease tol.")
     }
 
-    if ((tau2.hat <= min(se_out^2) / 5) && (!suppress.warning)) {
-        warning("The estimated overdispersion parameter is quite small. Consider to use the simple model without overdispersion.")
+    if ((tau2.hat <= min(se_out^2) / 5) && (suppress.warning < 0.5)) {
+        ## Will use suppress.warning = 0.5 in mr.raps.mle.all, so this will not be triggered
+        warning("The estimated overdispersion parameter is quite small. Consider using the simple model without overdispersion.")
     }
 
     score.var <- diag(
@@ -500,11 +503,11 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
         }
     }
 
-    if (abs(beta.hat.old - beta.hat) / abs(beta.hat + 1e-10) + abs(tau2.hat.old - tau2.hat) / abs(tau2.hat + 1e-10) > tol) {
+    if ((abs(beta.hat.old - beta.hat) / abs(beta.hat + 1e-10) + abs(tau2.hat.old - tau2.hat) / abs(tau2.hat + 1e-10) > tol) && (suppress.warning <= 0.5)) {
         warning("Did not converge when solving the estimating equations. Consider to increase niter or decrease tol.")
     }
 
-    if ((tau2.hat <= min(se_out^2) / 5) && (!suppress.warning)) {
+    if ((tau2.hat <= min(se_out^2) / 5) && (suppress.warning < 0.5)) {
         warning("The estimated overdispersion parameter is very small. Consider using the simple model without overdispersion.")
     }
 

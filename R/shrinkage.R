@@ -54,7 +54,8 @@ fit.mixture.model <- function(z, n = 2, ntry = 10, force.mu.zero = TRUE, diagnos
                                 function(param) loglike(param, z),
                                 method = "L-BFGS-B",
                                 lower = c(rep(0.01, n), rep(mu.lower, n), rep(0.01, n)),
-                                upper = c(rep(0.99, n), rep(mu.upper, n), rep(Inf, n))))
+                                upper = c(rep(0.99, n), rep(mu.upper, n), rep(Inf, n))),
+            silent = TRUE)
     }
     i <- which.min(sapply(1:length(res), function(i) {tmp <- res[[i]]$value; if (is.null(tmp)) {Inf} else {tmp}}))
     res <- res[[i]]
