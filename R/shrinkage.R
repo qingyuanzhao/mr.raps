@@ -432,7 +432,7 @@ plot.mr.raps <- function(x, ...) {
 #' @param ... Additional parameters to be passed to \code{mr.raps.shrinkage} (default is \code{shrinkage=FALSE}).
 #'
 #' @details
-#' This function calls \code{mr.raps.shrinkage} with \code{overdispersion = TRUE}, \code{loss.function = "huber"}, \code{shrinkage = TRUE}. The input data frame should contain the following variables:
+#' This function calls \code{mr.raps.shrinkage} with \code{overdispersion = TRUE}, \code{loss.function = "huber"}. The input data frame should contain the following variables:
 #' \enumerate{
 #' \item beta.exposure
 #' \item beta.outcome
