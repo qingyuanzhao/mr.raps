@@ -8,10 +8,12 @@ Description: Mendelian randomization is a method of identifying and estimating a
 Imports:
     stats,
     ggplot2,
+    ggrepel,
     graphics,
     gridExtra,
     nortest,
     rootSolve,
+    rsnps,
     splines
 Depends:
     R (>= 2.10)
