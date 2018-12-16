@@ -49,8 +49,10 @@ mr.raps.scatterplot <- function(data, annotate = TRUE, annotate.genes = NULL, ra
         snps <- data.frame(chr = paste0("chr", info$Chromosome),
                            start = info$BP,
                            end = info$BP)
+        info <- info[rowSums(is.na(snps)) == 0, ]
+        snps <- snps[rowSums(is.na(snps)) == 0, ]
         if (!is.null(annotate.genes)) {
-            tab <- bumphunter::matchGenes(snps, genes)
+            tab <- bumphunter::matchGenes(snps, annotate.genes)
             info <- cbind(info, tab)
         }
 
