@@ -74,6 +74,11 @@ mr.raps.mle <- function(b_exp, b_out, se_exp, se_out,
                     B = 1000,
                     suppress.warning = FALSE) {
 
+    if (sum(b_exp^2 / se_exp^2) < length(b_exp) - sqrt(length(b_exp)) &
+        !suppress.warning) {
+        warning("WARNING: The average F-statistic is very small and the causal effect may be non-identified.")
+    }
+
     loss.function <- match.arg(loss.function, c("l2", "huber", "tukey"))
     se.method <- match.arg(se.method, c("sandwich", "bootstrap"))
 
@@ -116,6 +121,11 @@ mr.raps.mle <- function(b_exp, b_out, se_exp, se_out,
 #' @export
 #'
 mr.raps.mle.all <- function(b_exp, b_out, se_exp, se_out) {
+
+    if (sum(b_exp^2 / se_exp^2) < length(b_exp) - sqrt(length(b_exp))) {
+        message("WARNING: The average F-statistic is very small and the causal effect may be non-identified.")
+    }
+
     res <- data.frame()
     for (over.dispersion in c(FALSE, TRUE)) {
         for (loss.function in c("l2", "huber", "tukey")) {
