@@ -15,3 +15,20 @@ modal.plot(b_exp = NULL, b_out = NULL, se_exp = NULL, se_out = NULL,
 \description{
 Modal plot to detect heterogeneity
 }
+\examples{
+data(lipid.cad)
+data <- subset(lipid.cad, lipid == "hdl" & restrict &
+gwas.selection == "teslovich_2010" &
+gwas.outcome == "cardiogramplusc4d_1000genome" &
+pval.selection < 1e-5)
+
+modal.plot(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, k = 1)
+
+data <- subset(lipid.cad, lipid == "ldl" & restrict &
+gwas.selection == "teslovich_2010" &
+gwas.outcome == "cardiogramplusc4d_1000genome" &
+pval.selection < 1e-5)
+
+modal.plot(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome)
+
+}

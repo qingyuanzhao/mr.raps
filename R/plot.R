@@ -23,7 +23,7 @@
 #'
 #' @export
 #'
-mr.raps.scatterplot <- function(data, annotate = TRUE, annotate.genes = NULL, rank.method = c("pval.both", "pval.selection", "pval.exposure"), num.snps = 10, fit = mr.raps(data, FALSE)) {
+mr.raps.scatterplot <- function(data, annotate = TRUE, annotate.genes = NULL, rank.method = c("pval.both", "pval.selection", "pval.exposure"), num.snps = 10, fit = mr.raps(data, FALSE), alpha = 0.8) {
 
     rank.method <- match.arg(rank.method)
 
@@ -63,15 +63,15 @@ mr.raps.scatterplot <- function(data, annotate = TRUE, annotate.genes = NULL, ra
     data$beta.exposure <- abs(data$beta.exposure)
 
     p <- ggplot(data) + aes(x = beta.exposure, y = beta.outcome,
-                            xmin = beta.exposure - se.exposure, xmax = beta.exposure + se.exposure, ymin = beta.outcome - se.outcome, ymax = beta.outcome + se.outcome) + geom_point(color = "#F8766D", size = 2) + geom_errorbar(alpha = 0.3, width = 0, color = "#F8766D") + geom_errorbarh(alpha = 0.3, height = 0, color = "#F8766D") + expand_limits(x = 0, y = 0) + xlab(paste("SNP effect on exposure")) + ylab(paste("SNP effect on outcome")) + theme_classic(base_size = 15) + geom_hline(yintercept = 0, linetype = "dashed", alpha = 0.4) + geom_vline(xintercept = 0, linetype = "dashed", alpha = 0.4)
+                            xmin = beta.exposure - se.exposure, xmax = beta.exposure + se.exposure, ymin = beta.outcome - se.outcome, ymax = beta.outcome + se.outcome) + geom_point(color = "#F8766D", size = 2) + geom_errorbar(alpha = alpha * 0.8, width = 0, color = "#F8766D") + geom_errorbarh(alpha = alpha * 0.8, height = 0, color = "#F8766D") + expand_limits(x = 0, y = 0) + xlab(paste("SNP effect on exposure")) + ylab(paste("SNP effect on outcome")) + theme_classic(base_size = 15) + geom_hline(yintercept = 0, linetype = "dashed", alpha = alpha * 0.8) + geom_vline(xintercept = 0, linetype = "dashed", alpha = alpha * 0.8)
 
-    p <- p + geom_abline(intercept = 0, slope = fit$beta.hat, alpha = 0.3, color = "#F8766D", size = 1, linetype = "solid")
+    p <- p + geom_abline(intercept = 0, slope = fit$beta.hat, alpha = alpha * 0.8, color = "#F8766D", size = 1, linetype = "solid")
 
     if (annotate) {
         if (!is.null(annotate.genes)) {
-            p <- p + aes(label = paste(SNP, name, sep = "\n")) + geom_text_repel(alpha = 0.6, size = 3.5, force = 5)
+            p <- p + aes(label = paste(SNP, name, sep = "\n")) + geom_text_repel(alpha = alpha, size = 4.5, force = 5)
         } else {
-            p <- p + aes(label = paste(SNP, paste(Chromosome, BP, sep = ":"), sep = "\n")) + geom_text_repel(alpha = 0.6, size = 3.5, force = 5)
+            p <- p + aes(label = paste(SNP, paste(Chromosome, BP, sep = ":"), sep = "\n")) + geom_text_repel(alpha = alpha, size = 4.5, force = 5)
         }
     }
 

@@ -6,7 +6,7 @@
 \usage{
 mr.raps.scatterplot(data, annotate = TRUE, annotate.genes = NULL,
   rank.method = c("pval.both", "pval.selection", "pval.exposure"),
-  num.snps = 10, fit = mr.raps(data, FALSE))
+  num.snps = 10, fit = mr.raps(data, FALSE), alpha = 0.8)
 }
 \arguments{
 \item{data}{A data frame (see \code{\link{mr.raps}}).}
