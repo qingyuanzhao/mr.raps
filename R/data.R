@@ -80,7 +80,7 @@
 #' \item Dehghan et al.\ (2011) GWAS of CRP
 #' \item The UK BioBank GWAS of self reported heart attack (2nd round release by the Neale lab).
 #' }
-#' To obtain this dataset, the Prins study is used for SNP selection (column \code{pval.selection}). The Dehghan dataset estimates the SNPs' effect on CRP and the UK BioBank dataset estimates the SNPs' on heart attack.
+#' To obtain this dataset, the Prins study is used for SNP selection (column \code{pval.selection}). The Dehghan dataset estimates the SNPs' effect on CRP and the UK BioBank dataset estimates the SNPs' on heart attack. The \code{restrict} column indicates whether the instruments are restricted to be unassociated with LDL cholesterol (p-value > 0.5 in the AGEN GWAS).
 #'
 #' @docType data
 #'
