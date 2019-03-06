@@ -4,9 +4,9 @@
 \name{crp.mi}
 \alias{crp.mi}
 \title{Effect of C-Reactive Protein on heart attack}
-\format{A \code{data.frame} with 12026 rows and 24 variables.}
+\format{A \code{data.frame} with 1581 rows and 31 variables.}
 \usage{
-data(lipid.mi)
+data(crp.mi)
 }
 \description{
 This dataset is created from three genome-wide association studies:

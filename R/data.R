@@ -84,11 +84,77 @@
 #'
 #' @docType data
 #'
-#' @usage data(lipid.mi)
+#' @usage data(crp.mi)
 #'
-#' @format A \code{data.frame} with 12026 rows and 24 variables.
+#' @format A \code{data.frame} with 1581 rows and 31 variables.
 #'
 #' @keywords datasets
 #'
 #'
 "crp.mi"
+
+#' Effect of Coronary Artery Disease (CAD) on Body Mass Index (BMI) (To study reverse causality)
+#'
+#' This dataset is created from three genome-wide association studies:
+#' \enumerate{
+#' \item The C4D GWAS of CAD.
+#' \item The CARDIoGRAM GWAS of CAD.
+#' \item The UK BioBank GWAS of BMI (2nd round release by the Neale lab).
+#' }
+#' To obtain this dataset, the C4D study is used for SNP selection (column \code{pval.selection}). The CARDIoGRAM dataset estimates the SNPs' effect on CAD and the UK BioBank dataset estimates the SNPs' on BMI.
+#'
+#'
+#' @docType data
+#'
+#' @usage data(cad.bmi)
+#'
+#' @format A \code{data.frame} with 1625 rows and 34 variables.
+#'
+#' @keywords datasets
+#'
+#'
+"cad.bmi"
+
+#' Effect of Body Mass Index (BMI) on Coronary Artery Disease (CAD)
+#'
+#' This dataset is created from three genome-wide association studies:
+#' \enumerate{
+#' \item A 2017 GWAS of BMI by Akiyama et al.
+#' \item The UK BioBank GWAS of BMI (2nd round release by the Neale lab).
+#' \item The CARDIoGRAMplusC4D with 1000 Genome Project imputation GWAS of CAD.
+#' }
+#' To obtain this dataset, the Akiyama study is used for SNP selection (column \code{pval.selection}). The UK BioBank dataset estimates the SNPs' effect on BMI and the CARDIoGRAMplusC4D estimates the SNPs' effect on CAD.
+#'
+#'
+#' @docType data
+#'
+#' @usage data(bmi.cad)
+#'
+#' @format A \code{data.frame} with 1119 rows and 42 variables.
+#'
+#' @keywords datasets
+#'
+#'
+"bmi.cad"
+
+#' Effect of Body Mass Index (BMI) on Acute Ischemic Stroke (AIS)
+#'
+#' This dataset is created from three genome-wide association studies:
+#' \enumerate{
+#' \item A 2017 GWAS of BMI by Akiyama et al.
+#' \item The UK BioBank GWAS of BMI (2nd round release by the Neale lab).
+#' \item A 2018 GWAS of AIS by Malik et al.
+#' }
+#' To obtain this dataset, the Akiyama study is used for SNP selection (column \code{pval.selection}). The UK BioBank dataset estimates the SNPs' effect on BMI and the Malik dataset estimates the SNPs' effect on AIS.
+#'
+#'
+#' @docType data
+#'
+#' @usage data(bmi.ais)
+#'
+#' @format A \code{data.frame} with 1880 rows and 29 variables.
+#'
+#' @keywords datasets
+#'
+#'
+"bmi.ais"
