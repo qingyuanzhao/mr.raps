@@ -49,7 +49,7 @@
 #' \item A 2010 GWAS of blood lipids (Teslovich et al.\, 2010), named "teslovich_2010" in the dataset.
 #' \item The MetaboChip (MC) data in a 2013 GWAS of blood lipids (Willer et al.\, 2013), named "mc_2013" in the dataset.
 #' \item The CARDIoGRAMplusC4D meta-analysis of coronary artery disease (CARDIoGRAMplusC4D Consortium, 20135, named "cardiogramplusc4d_1000genome" in the dataset.
-#' \item The UK BioBank GWAS of self reported heart attach (interim release by the Neale lab), named "ukbb_6150_round2" in the dataset.
+#' \item The UK BioBank GWAS of self reported heart attack (interim release by the Neale lab), named "ukbb_6150_round2" in the dataset.
 #' }
 #'
 #' \code{lipid.cad} contains in total 24 sub-datasets, each is suitable for a Mendelian randomization study. To obtain a sub-dataset, you must decide on
@@ -71,3 +71,24 @@
 #'
 #'
 "lipid.cad"
+
+#' Effect of C-Reactive Protein on heart attack
+#'
+#' This dataset is created from three genome-wide association studies:
+#' \enumerate{
+#' \item Prins et al.\ (2017) GWAS of CRP.
+#' \item Dehghan et al.\ (2011) GWAS of CRP
+#' \item The UK BioBank GWAS of self reported heart attack (2nd round release by the Neale lab).
+#' }
+#' To obtain this dataset, the Prins study is used for SNP selection (column \code{pval.selection}). The Dehghan dataset estimates the SNPs' effect on CRP and the UK BioBank dataset estimates the SNPs' on heart attack.
+#'
+#' @docType data
+#'
+#' @usage data(lipid.mi)
+#'
+#' @format A \code{data.frame} with 12026 rows and 24 variables.
+#'
+#' @keywords datasets
+#'
+#'
+"crp.mi"
