@@ -158,3 +158,24 @@
 #'
 #'
 "bmi.ais"
+
+#' Effect of Coronary Artery Disease (BMI) on Coronary Artery Disease (CAD)
+#'
+#' This dataset is created from three genome-wide association studies:
+#' \enumerate{
+#' \item The UK BioBank GWAS of heart attack (2nd round release by the Neale lab).
+#' \item The C4D GWAS of CAD.
+#' \item The CARDIoGRAM GWAS of CAD.
+#' }
+#' This dataset serves the purpose of a validation study. Since both the "exposure" and the "outcome" are CAD, the joint normal model of the GWAS summary statistics is expected to hold with no pleiotropy and "causal effect" equal to 1.
+#'
+#' @docType data
+#'
+#' @usage data(cad.cad)
+#'
+#' @format A \code{data.frame} with 1650 rows and 39 variables.
+#'
+#' @keywords datasets
+#'
+#'
+"cad.cad"
