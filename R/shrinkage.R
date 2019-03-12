@@ -461,9 +461,9 @@ plot.mr.raps <- function(x, ...) {
 #' mr.raps(data)
 #' }
 #'
-mr.raps <- function(data, diagnostics = TRUE, ...) {
+mr.raps <- function(data, diagnostics = TRUE, loss.function = "huber", ...) {
     prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
-    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", prior.param = prior.param, ...)
+    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, loss.function, prior.param = prior.param, diagnostics = diagnostics, ...)
 
     if (diagnostics) {
         cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))
