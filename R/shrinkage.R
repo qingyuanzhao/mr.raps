@@ -492,8 +492,8 @@ mr.raps <- function(data, diagnostics = TRUE, over.dispersion = TRUE, loss.funct
         lm.test <- lm(std.resids ~ bs(weights, df) - 1)
         print(anova(lm.test))
 
-        cat("Showing diagnostic plot ...\n")
-        plot(out)
+        ## cat("Showing diagnostic plot ...\n")
+        ## plot(out)
     }
 
     out
