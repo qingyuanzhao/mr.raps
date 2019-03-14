@@ -72,26 +72,26 @@
 #'
 "lipid.cad"
 
-#' Effect of C-Reactive Protein on heart attack
+#' Effect of C-Reactive Protein on Coronary Artery Disease (CAD)
 #'
 #' This dataset is created from three genome-wide association studies:
 #' \enumerate{
 #' \item Prins et al.\ (2017) GWAS of CRP.
 #' \item Dehghan et al.\ (2011) GWAS of CRP
-#' \item The UK BioBank GWAS of self reported heart attack (2nd round release by the Neale lab).
+#' \item The CARDIoGRAMplusC4D GWAS of CAD.
 #' }
-#' To obtain this dataset, the Prins study is used for SNP selection (column \code{pval.selection}). The Dehghan dataset estimates the SNPs' effect on CRP and the UK BioBank dataset estimates the SNPs' on heart attack. The \code{restrict} column indicates whether the instruments are restricted to be unassociated with LDL cholesterol (p-value > 0.5 in the AGEN GWAS).
+#' To obtain this dataset, the Prins study is used for SNP selection (column \code{pval.selection}). The Dehghan dataset estimates the SNPs' effect on CRP and the CARDIoGRAMplusC4D dataset estimates the SNPs' on CAD.
 #'
 #' @docType data
 #'
-#' @usage data(crp.mi)
+#' @usage data(crp.cad)
 #'
-#' @format A \code{data.frame} with 1581 rows and 31 variables.
+#' @format A \code{data.frame} with 1575 rows and 30 variables.
 #'
 #' @keywords datasets
 #'
 #'
-"crp.mi"
+"crp.cad"
 
 #' Effect of Coronary Artery Disease (CAD) on Body Mass Index (BMI) (To study reverse causality)
 #'

@@ -4,7 +4,7 @@
 \alias{mr.raps}
 \title{Recommended \code{mr.raps} procedure}
 \usage{
-mr.raps(data, diagnostics = TRUE, ...)
+mr.raps(data, diagnostics = TRUE, loss.function = "huber", ...)
 }
 \arguments{
 \item{data}{A data frame (see Details)}

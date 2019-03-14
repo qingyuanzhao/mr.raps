@@ -288,19 +288,33 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     }
 
     if (!over.dispersion) {
-        res <- mr.raps.simple(b_exp, b_out, se_exp, se_out)
-        init.param <- res$beta.hat
+        res1 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "l2")
+        res2 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "huber")
+        init.param <- c(res1$beta.hat, res2$beta.hat)
+        init.param.perturbed <-
+            init.param[rep(c(1,2), each = num.init - 1)] +
+                c(1 * abs(res1$beta.hat) * rexp(num.init - 1) * sample(c(-1,1), num.init-1, TRUE),
+                  1 * abs(res2$beta.hat) * rexp(num.init - 1) * sample(c(-1,1), num.init-1, TRUE))
+        init.param <- matrix(c(init.param, init.param.perturbed), ncol = 1)
     } else {
-        res <- mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function, suppress.warning = TRUE)
-        init.param <- c(res$beta.hat, res$tau2.hat)
+        res1 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, TRUE, "l2", suppress.warning = TRUE)
+        res2 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, TRUE, "huber", suppress.warning = TRUE)
+        init.param <- matrix(c(res1$beta.hat, res2$beta.hat, res1$tau2.hat, res2$tau2.hat), 2, 2)
+        init.param.perturbed <-
+            init.param[rep(c(1,2), each = num.init - 1), ] +
+                rbind(cbind(1 * abs(res1$beta.hat) * rexp(num.init - 1) * sample(c(-1,1), num.init-1, TRUE),
+                            ## 1 * res1$tau2.se * rexp(num.init - 1)
+                            0),
+                      cbind(1 * abs(res2$beta.hat) * rexp(num.init - 1) * sample(c(-1,1), num.init-1, TRUE),
+                            ## 1 * res2$tau2.se * rexp(num.init - 1)
+                            0))
+        init.param <- rbind(init.param, init.param.perturbed)
     }
 
-    beta.init <- init.param[1] + c(0, 2 * init.param[1] * rnorm(num.init - 1))
     res <- list()
     beta <- rep(NA, num.init)
     for (i in 1:num.init) {
-        init.param[1] <- beta.init[i]
-        suppressWarnings(res[[i]] <- multiroot(psi, init.param))
+        suppressWarnings(res[[i]] <- multiroot(psi, init.param[i, ]))
         if ((over.dispersion) && (!is.na(res[[i]]$root[2])) && (res[[i]]$root[2] > median(se_out) * 10)) {
             beta[i] <- NA
         } else {
@@ -311,6 +325,8 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
             }
         }
     }
+
+    beta.init <- mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function)$beta.hat
     j <- which.min(abs(beta - beta.init[1]))
     if (length(j) == 0) {
         warning("Cannot find solution with finite over.dispersion. Using tau2 = 0.")
@@ -321,7 +337,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
 
     if (multiple.root.warning > 0) {
         for(i in 1:num.init) {
-            if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 100 * abs(beta[j] - beta.init[1])) {
+            if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 100 * max(abs(beta[j] - beta.init[1]), abs(beta.init[1]) / 10)) {
                 warning(paste("The estimating equations might have another finite root. The closest root is beta =", beta[j], "and the other root is beta =", beta[i], "and the initialization is beta =", beta.init[1]))
             }
             if (multiple.root.warning > 1) {
@@ -461,9 +477,9 @@ plot.mr.raps <- function(x, ...) {
 #' mr.raps(data)
 #' }
 #'
-mr.raps <- function(data, diagnostics = TRUE, loss.function = "huber", ...) {
+mr.raps <- function(data, diagnostics = TRUE, over.dispersion = TRUE, loss.function = "huber", ...) {
     prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
-    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, loss.function, prior.param = prior.param, diagnostics = diagnostics, ...)
+    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, over.dispersion, loss.function, prior.param = prior.param, diagnostics = diagnostics, ...)
 
     if (diagnostics) {
         cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))
