@@ -163,7 +163,7 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #' @details
 #' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle}. See Efron and Hinkley (1978) referenced below.
 #'
-#' Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.mle} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization.
+#' Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.mle} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization. When the program does not find a finite solution, consider increasing the value of \code{num.init}.
 #'
 #' @references
 #' Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2018). A genome-wide design and an empirical partially Bayes approach to increase the power of Mendelian randomization, with application to the effect of blood lipids on cardiovascular disease. <arXiv:1804.07371>.
@@ -448,6 +448,7 @@ plot.mr.raps <- function(x, ...) {
 
 #' Recommended \code{mr.raps} procedure
 #'
+#' @inheritParams mr.raps.shrinkage
 #' @param data A data frame (see Details)
 #' @param diagnostics Logical indicator for showing diagnostic plots.
 #' @param ... Additional parameters to be passed to \code{mr.raps.shrinkage} (default is \code{shrinkage=FALSE}).
@@ -460,6 +461,8 @@ plot.mr.raps <- function(x, ...) {
 #' \item se.exposure
 #' \item se.outcome
 #' }
+#'
+#' @seealso mr.raps.shrinkage
 #'
 #' @import splines
 #' @export

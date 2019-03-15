@@ -4,12 +4,17 @@
 \alias{mr.raps}
 \title{Recommended \code{mr.raps} procedure}
 \usage{
-mr.raps(data, diagnostics = TRUE, loss.function = "huber", ...)
+mr.raps(data, diagnostics = TRUE, over.dispersion = TRUE,
+  loss.function = "huber", ...)
 }
 \arguments{
 \item{data}{A data frame (see Details)}
 
 \item{diagnostics}{Logical indicator for showing diagnostic plots.}
+
+\item{over.dispersion}{Should the model consider overdispersion (systematic pleiotropy)? Default is FALSE.}
+
+\item{loss.function}{Either the squared error loss (\code{l2}) or robust loss functions/scores (\code{huber} or \code{tukey}).}
 
 \item{...}{Additional parameters to be passed to \code{mr.raps.shrinkage} (default is \code{shrinkage=FALSE}).}
 }
@@ -38,4 +43,7 @@ gwas.outcome == "cardiogramplusc4d_1000genome")
 mr.raps(data)
 }
 
+}
+\seealso{
+mr.raps.shrinkage
 }
