@@ -163,7 +163,7 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #' @details
 #' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle}. See Efron and Hinkley (1978) referenced below.
 #'
-#' Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.mle} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization.
+#' Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.mle} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization. When the program does not find a finite solution, consider increasing the value of \code{num.init}.
 #'
 #' @references
 #' Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2018). A genome-wide design and an empirical partially Bayes approach to increase the power of Mendelian randomization, with application to the effect of blood lipids on cardiovascular disease. <arXiv:1804.07371>.
@@ -288,19 +288,33 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     }
 
     if (!over.dispersion) {
-        res <- mr.raps.simple(b_exp, b_out, se_exp, se_out)
-        init.param <- res$beta.hat
+        res1 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "l2")
+        res2 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "huber")
+        init.param <- c(res1$beta.hat, res2$beta.hat)
+        init.param.perturbed <-
+            init.param[rep(c(1,2), each = num.init - 1)] +
+                c(1 * abs(res1$beta.hat) * rexp(num.init - 1) * sample(c(-1,1), num.init-1, TRUE),
+                  1 * abs(res2$beta.hat) * rexp(num.init - 1) * sample(c(-1,1), num.init-1, TRUE))
+        init.param <- matrix(c(init.param, init.param.perturbed), ncol = 1)
     } else {
-        res <- mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function, suppress.warning = TRUE)
-        init.param <- c(res$beta.hat, res$tau2.hat)
+        res1 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, TRUE, "l2", suppress.warning = TRUE)
+        res2 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, TRUE, "huber", suppress.warning = TRUE)
+        init.param <- matrix(c(res1$beta.hat, res2$beta.hat, res1$tau2.hat, res2$tau2.hat), 2, 2)
+        init.param.perturbed <-
+            init.param[rep(c(1,2), each = num.init - 1), ] +
+                rbind(cbind(1 * abs(res1$beta.hat) * rexp(num.init - 1) * sample(c(-1,1), num.init-1, TRUE),
+                            ## 1 * res1$tau2.se * rexp(num.init - 1)
+                            0),
+                      cbind(1 * abs(res2$beta.hat) * rexp(num.init - 1) * sample(c(-1,1), num.init-1, TRUE),
+                            ## 1 * res2$tau2.se * rexp(num.init - 1)
+                            0))
+        init.param <- rbind(init.param, init.param.perturbed)
     }
 
-    beta.init <- init.param[1] + c(0, 2 * init.param[1] * rnorm(num.init - 1))
     res <- list()
     beta <- rep(NA, num.init)
     for (i in 1:num.init) {
-        init.param[1] <- beta.init[i]
-        suppressWarnings(res[[i]] <- multiroot(psi, init.param))
+        suppressWarnings(res[[i]] <- multiroot(psi, init.param[i, ]))
         if ((over.dispersion) && (!is.na(res[[i]]$root[2])) && (res[[i]]$root[2] > median(se_out) * 10)) {
             beta[i] <- NA
         } else {
@@ -311,6 +325,8 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
             }
         }
     }
+
+    beta.init <- mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function)$beta.hat
     j <- which.min(abs(beta - beta.init[1]))
     if (length(j) == 0) {
         warning("Cannot find solution with finite over.dispersion. Using tau2 = 0.")
@@ -321,7 +337,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
 
     if (multiple.root.warning > 0) {
         for(i in 1:num.init) {
-            if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 100 * abs(beta[j] - beta.init[1])) {
+            if (!is.na(beta[i]) && abs(beta[i] - beta[j]) > 1e-4 && abs(beta[i] - beta.init[1]) < 100 * max(abs(beta[j] - beta.init[1]), abs(beta.init[1]) / 10)) {
                 warning(paste("The estimating equations might have another finite root. The closest root is beta =", beta[j], "and the other root is beta =", beta[i], "and the initialization is beta =", beta.init[1]))
             }
             if (multiple.root.warning > 1) {
@@ -432,6 +448,7 @@ plot.mr.raps <- function(x, ...) {
 
 #' Recommended \code{mr.raps} procedure
 #'
+#' @inheritParams mr.raps.shrinkage
 #' @param data A data frame (see Details)
 #' @param diagnostics Logical indicator for showing diagnostic plots.
 #' @param ... Additional parameters to be passed to \code{mr.raps.shrinkage} (default is \code{shrinkage=FALSE}).
@@ -444,6 +461,8 @@ plot.mr.raps <- function(x, ...) {
 #' \item se.exposure
 #' \item se.outcome
 #' }
+#'
+#' @seealso mr.raps.shrinkage
 #'
 #' @import splines
 #' @export
@@ -461,9 +480,9 @@ plot.mr.raps <- function(x, ...) {
 #' mr.raps(data)
 #' }
 #'
-mr.raps <- function(data, diagnostics = TRUE, ...) {
+mr.raps <- function(data, diagnostics = TRUE, over.dispersion = TRUE, loss.function = "huber", ...) {
     prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
-    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", prior.param = prior.param, ...)
+    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, over.dispersion, loss.function, prior.param = prior.param, diagnostics = diagnostics, ...)
 
     if (diagnostics) {
         cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))
@@ -476,8 +495,8 @@ mr.raps <- function(data, diagnostics = TRUE, ...) {
         lm.test <- lm(std.resids ~ bs(weights, df) - 1)
         print(anova(lm.test))
 
-        cat("Showing diagnostic plot ...\n")
-        plot(out)
+        ## cat("Showing diagnostic plot ...\n")
+        ## plot(out)
     }
 
     out

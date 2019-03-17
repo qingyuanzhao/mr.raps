@@ -6,7 +6,7 @@
 \usage{
 mr.raps.scatterplot(data, annotate = TRUE, annotate.genes = NULL,
   rank.method = c("pval.both", "pval.selection", "pval.exposure"),
-  num.snps = 10)
+  num.snps = 10, fit = mr.raps(data, FALSE))
 }
 \arguments{
 \item{data}{A data frame (see \code{\link{mr.raps}}).}
@@ -18,6 +18,8 @@ mr.raps.scatterplot(data, annotate = TRUE, annotate.genes = NULL,
 \item{rank.method}{How to select strongest SNPs for plot?}
 
 \item{num.snps}{How many SNPs are shown?}
+
+\item{fit}{A \code{mr.raps} fit.}
 }
 \description{
 Scatter plot with annotation
