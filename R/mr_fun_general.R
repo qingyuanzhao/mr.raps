@@ -28,6 +28,15 @@ grappleRobustEst <- function(b_exp, b_out,
     b_exp <- as.matrix(b_exp)
     se_exp <- as.matrix(se_exp)
 
+    ## check genetic correlation of the exposures
+    gene.cov <- t(b_exp) %*% b_exp - cor.mat[-nrow(cor.mat), -ncol(cor.mat)] * sqrt(colSums(se_exp^2) %*% t(colSums(se_exp^2)))
+    gene.cor <- t(t(gene.cov / sqrt(diag(gene.cov))) / sqrt(diag(gene.cov)))
+    print("Estimated genetic correlation of the exposures:")
+    print(gene.cor)
+    if (max(abs(gene.cor - diag(nrow(gene.cor)))) > 0.8) {
+        warning("Some of the exposures seem to have very high genetic correlation. Because of the collinearity, the algorithm could be unstable.")
+    }
+
     loss.function <- match.arg(loss.function, c("l2", "huber", "tukey"))
     if (is.null(cor.mat))
         cor.mat <- diag(rep(1, ncol(b_exp) + 1))
