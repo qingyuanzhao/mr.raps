@@ -5,6 +5,22 @@
 #'
 #' @export
 #'
+#' @examples
+#' data(lipid.cad)
+#' data <- subset(lipid.cad, lipid == "hdl" & restrict &
+#' gwas.selection == "teslovich_2010" &
+#' gwas.outcome == "cardiogramplusc4d_1000genome" &
+#' pval.selection < 1e-5)
+#'
+#' modal.plot(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, k = 1)
+#'
+#' data <- subset(lipid.cad, lipid == "ldl" & restrict &
+#' gwas.selection == "teslovich_2010" &
+#' gwas.outcome == "cardiogramplusc4d_1000genome" &
+#' pval.selection < 1e-5)
+#'
+#' modal.plot(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome)
+#'
 modal.plot <- function(b_exp = NULL, b_out = NULL, se_exp = NULL, se_out = NULL, data = NULL, k = 1.5, weight.option = c("MLE", "shrinkage")) {
 
     weight.option <- match.arg(weight.option)
