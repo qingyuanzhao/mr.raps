@@ -31,7 +31,7 @@ mr.raps.scatterplot <- function(data, annotate = TRUE, annotate.genes = NULL, ra
         data$pval.exposure <- 2 * pnorm(-abs(data$beta.exposure / data$se.exposure))
     }
 
-    if (!"pval.exposure" %in% names(data)) {
+    if (!"pval.selection" %in% names(data)) {
         message("Use rank.method = pval.exposure because pval.selection is not available")
         rank.method <- "pval.exposure"
     }

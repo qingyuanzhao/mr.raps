@@ -467,11 +467,11 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
 
     robust.loglike.fixtau <- function(beta, tau2) {
         alpha.hat <- 0
-        - (1/2) * sum(rho((b_out - alpha.hat - b_exp * beta) / sqrt(tau2 + se_out^2 + se_exp^2 * beta^2)))
+        - (1/2) * sum(rho((b_out - alpha.hat - b_exp * beta) / sqrt(max(0, tau2 + se_out^2 + se_exp^2 * beta^2))))
     }
 
     robust.E <- function(beta, tau2) {
-        t <- (b_out - beta * b_exp) / sqrt(tau2 + se_out^2 + se_exp^2 * beta^2)
+        t <- (b_out - beta * b_exp) / sqrt(max(0, tau2 + se_out^2 + se_exp^2 * beta^2))
         se_exp^2 * (t * rho(t, deriv = 1) - delta) / (tau2 + se_out^2 + se_exp^2 * beta^2)
     }
 

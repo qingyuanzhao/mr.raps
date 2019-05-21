@@ -137,6 +137,7 @@ getInput <- function(sel.files,
     sel.SNPs <- rownames(beta_exp)
 
     data_out <- temp
+    data_out <- data_out[!duplicated(data_out$SNP), ]
     rownames(data_out) <- data_out$SNP
     pvals <- pvals[sel.SNPs]
 
@@ -164,8 +165,21 @@ getInput <- function(sel.files,
         gc()
     }
 
-    return(list(beta_exp = beta_exp, se_exp = se_exp,
-                data_out = data_out, sel.pvals = pvals))
+    if (length(exp.files) > 1) {
+        return(list(beta_exp = beta_exp, se_exp = se_exp,
+                    data_out = data_out, sel.pvals = pvals))
+    } else {
+        out <- data.frame(SNP = data_out$SNP,
+                          beta.exposure = beta_exp,
+                          beta.outcome = data_out$beta,
+                          se.exposure = se_exp,
+                          se.outcome = data_out$se,
+                          pval.selection = pvals)
+        rownames(out) <- NULL
+        names(out) <- c("SNP", "beta.exposure", "beta.outcome",
+                        "se.exposure", "se.outcome", "pval.selection")
+        out
+    }
 }
 
 

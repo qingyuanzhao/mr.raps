@@ -17,7 +17,7 @@
 #'
 #' @export
 #'
-fit.mixture.model <- function(z, n = 2, ntry = 10, force.mu.zero = TRUE, diagnostics = FALSE) {
+fit.mixture.model <- function(z, n = 2, ntry = 20, force.mu.zero = TRUE, diagnostics = FALSE) {
 
     loglike <- function(param, z) {
         n <- length(param) / 3
@@ -58,6 +58,9 @@ fit.mixture.model <- function(z, n = 2, ntry = 10, force.mu.zero = TRUE, diagnos
             silent = TRUE)
     }
     i <- which.min(sapply(1:length(res), function(i) {tmp <- res[[i]]$value; if (is.null(tmp)) {Inf} else {tmp}}))
+    if (length(i) == 0) {
+        stop("Failed to initialize, increase ntry")
+    }
     res <- res[[i]]
 
     param <- res$par
