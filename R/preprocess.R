@@ -73,12 +73,11 @@ getInput <- function(sel.files,
         temp <- dat[dat$SNP %in% sel.SNPs, ]
         rm(dat)
 
-
         ## harmonize
         if (!is.null(ref.data.exp)) {
             temp <- formatData(temp, "outcome")
             temp.result <- suppressMessages(harmonise_data(ref.data.exp, temp))
-            temp.result <- temp.result[temp.result$mr_keep, ]
+            ## temp.result <- temp.result[temp.result$mr_keep, ]
             temp <- temp.result[, c(1, grep(".outcome", colnames(temp.result)))]
             colnames(temp) <- gsub(".outcome", "", colnames(temp))
             ref.data.exp <- temp.result[, c(1, grep(".exposure", colnames(temp.result)))]
@@ -96,6 +95,7 @@ getInput <- function(sel.files,
             ref.data.exp <- formatData(temp, "exposure")
         }
 
+        temp <- temp[!duplicated(temp$SNP), ]
         if (is.null(beta_exp)) {
             beta_exp <- data.frame(temp$beta)
             rownames(beta_exp) <- temp$SNP
@@ -120,7 +120,7 @@ getInput <- function(sel.files,
     ## harmonize
     temp <- formatData(temp, "outcome")
     temp.result <- suppressMessages(harmonise_data(ref.data.exp, temp))
-    temp.result <- temp.result[temp.result$mr_keep, ]
+    ## temp.result <- temp.result[temp.result$mr_keep, ]
     temp <- temp.result[, c(1, grep(".outcome", colnames(temp.result)))]
     colnames(temp) <- gsub(".outcome", "", colnames(temp))
     ref.data.exp <- temp.result[, c(1, grep(".exposure", colnames(temp.result)))]
@@ -184,135 +184,140 @@ getInput <- function(sel.files,
 
 
 
-
 #' Calculate the \code{(k + 1)} by \code{(k + 1)} correlation matrix between the \code{k} risk factors and the outcome
 #'
 #' We use the SNPs that has no/very weak effect on the risk factors to estimate the shared correlation matrix acrooss SNPs
 #'
 #' @inheritParams getInput
 #' @param p.thres The lower threshold of the p-values for a SNP to be used in calculating the correlation matrix
-#' @param seed.vec A length \code{m} vector of seeds used. In order to get a stable estimate of the correlation matrix, we take the average of \code{m} numbers of estimated correlation matrix weather each estimate use a randomly sampled clumped set of SNPs.
+#' @param seed.vec A length \code{m} vector of seeds used if clumping method is used. In order to get a stable estimate of the correlation matrix, we take the average of \code{m} numbers of estimated correlation matrix weather each estimate use a randomly sampled clumped set of SNPs.
 #'
 #' @export
 calCor <- function(sel.files,
                    exp.files,
                    out.file,
-                   plink_exe, refdat,
+                   plink_exe = NULL, refdat = NULL, no.clumping = T,
                    p.thres = 0.5, clump.directly = F,
                    seed.vec = 1:20) {
-    sel.SNPs <- NULL
-    for (file in sel.files) {
-        print(paste("loading data from selection:", file, "..."))
-        load(file)
-        sel.snps <- dat$SNP[dat$pval > p.thres]
-        if (is.null(sel.SNPs))
-            sel.SNPs <- sel.snps
-        else
-            sel.SNPs <- intersect(sel.SNPs, sel.snps)
-        rm(dat)
-    }
+  sel.SNPs <- NULL
+  for (file in sel.files) {
+    print(paste("loading data from selection:", file, "..."))
+    load(file)
+    sel.snps <- dat$SNP[dat$pval > p.thres]
+    if (is.null(sel.SNPs))
+      sel.SNPs <- sel.snps
+    else
+      sel.SNPs <- intersect(sel.SNPs, sel.snps)
+    rm(dat)
+  }
 
-    if (clump.directly) {
-        data.sel <- data.frame(SNP = sel.SNPs, pval = runif(length(sel.SNPs)))
-        paste("Clumping using PLINK")
-        data.sel <- plink_clump(data.sel, plink_exe, refdat)
-        sel.SNPs <- data.sel$SNP
-        rm(data.sel)
-        gc()
-    }
+  if (clump.directly) {
+    data.sel <- data.frame(SNP = sel.SNPs, pval = runif(length(sel.SNPs)))
+    paste("Clumping using PLINK")
+    data.sel <- plink_clump(data.sel, plink_exe, refdat)
+    sel.SNPs <- data.sel$SNP
+    rm(data.sel)
+    gc()
+  }
 
 
-    data.exp <- NULL
-    ref.data.exp <- NULL
-    for (exp.file in exp.files) {
-        print(paste("loading data from exposure:", exp.file, "..."))
+  data.exp <- NULL
+  ref.data.exp <- NULL
+  for (exp.file in exp.files) {
+    print(paste("loading data from exposure:", exp.file, "..."))
 
-        load(exp.file)
-        sel.SNPs <- intersect(sel.SNPs, dat$SNP)
-        temp <- dat[dat$SNP %in% sel.SNPs, ]
-        rm(dat)
-
-        ## harmonize
-        if (!is.null(ref.data.exp)) {
-            temp <- formatData(temp, "outcome")
-            temp.result <- suppressMessages(harmonise_data(ref.data.exp, temp))
-            temp.result <- temp.result[temp.result$mr_keep, ]
-            temp <- temp.result[, c(1, grep(".outcome", colnames(temp.result)))]
-            colnames(temp) <- gsub(".outcome", "", colnames(temp))
-            ref.data.exp <- temp.result[, c(1, grep(".exposure", colnames(temp.result)))]
-                                        #    colnames(data.sel) <- gsub(".exposure", "", colnames(data.sel))
-            rm(temp.result)
-            gc()
-            data.exp <- data.exp[as.character(ref.data.exp$SNP), , drop = F]
-            flip <- rep(1, nrow(data.exp))
-            flip[sign(data.exp[, 1]) != sign(ref.data.exp$beta.exposure/ref.data.exp$se.exposure)] <- -1
-                                        #   print(sum(flip == -1))
-            data.exp <- flip * data.exp
-            sel.SNPs <- rownames(data.exp)
-        } else {
-            ref.data.exp <- formatData(temp, "exposure")
-        }
-
-        temp$z <- temp$beta/temp$se
-        if (is.null(data.exp)) {
-            data.exp <- data.frame(temp$z)
-            rownames(data.exp) <- temp$SNP
-        } else {
-            data.exp <- data.exp[as.character(temp$SNP), , drop = F]
-            data.exp <- cbind(data.exp, temp$z)
-        }
-        rm(temp)
-    }
-    colnames(data.exp) <- paste("exposure", 1:length(exp.files))
-
-    ## load outcome file
-    print(paste("loading data for outcome:", out.file, "..."))
-    load(out.file)
+      load(exp.file)
     sel.SNPs <- intersect(sel.SNPs, dat$SNP)
     temp <- dat[dat$SNP %in% sel.SNPs, ]
     rm(dat)
+
     ## harmonize
-    temp <- formatData(temp, "outcome")
-    temp.result <- suppressMessages(harmonise_data(ref.data.exp, temp))
-    temp.result <- temp.result[temp.result$mr_keep, ]
-    temp <- temp.result[, c(1, grep(".outcome", colnames(temp.result)))]
-    colnames(temp) <- gsub(".outcome", "", colnames(temp))
-    ref.data.exp <- temp.result[, c(1, grep(".exposure", colnames(temp.result)))]
-                                        #    colnames(data.sel) <- gsub(".exposure", "", colnames(data.sel))
-    rm(temp.result)
-    gc()
-    data.exp <- data.exp[as.character(ref.data.exp$SNP), , drop = F]
-    flip <- rep(1, nrow(data.exp))
-    flip[sign(data.exp[, 1]) != sign(ref.data.exp$beta.exposure/ref.data.exp$se.exposure)] <- -1
-                                        #  print(sum(flip == -1))
-    data.exp <- flip * data.exp
-    sel.SNPs <- rownames(data.exp)
+    if (!is.null(ref.data.exp)) {
+      temp <- formatData(temp, "outcome")
+      temp.result <- suppressMessages(harmonise_data(ref.data.exp, temp))
+      temp.result <- temp.result[temp.result$mr_keep, ]
+      temp <- temp.result[, c(1, grep(".outcome", colnames(temp.result)))]
+      colnames(temp) <- gsub(".outcome", "", colnames(temp))
+      ref.data.exp <- temp.result[, c(1, grep(".exposure", colnames(temp.result)))]
+  #    colnames(data.sel) <- gsub(".exposure", "", colnames(data.sel))
+      rm(temp.result)
+      gc()
+      data.exp <- data.exp[as.character(ref.data.exp$SNP), , drop = F]
+      flip <- rep(1, nrow(data.exp))
+      flip[sign(data.exp[, 1]) != sign(ref.data.exp$beta.exposure/ref.data.exp$se.exposure)] <- -1
+   #   print(sum(flip == -1))
+      data.exp <- flip * data.exp
+      sel.SNPs <- rownames(data.exp)
+    } else {
+      ref.data.exp <- formatData(temp, "exposure")
+    }
 
     temp$z <- temp$beta/temp$se
-    data.exp <- data.exp[as.character(temp$SNP), , drop = F]
-    data.exp <- cbind(data.exp, temp$z)
-    colnames(data.exp) <- c(colnames(data.exp)[1:(ncol(data.exp) - 1)], "Outcome")
+    if (is.null(data.exp)) {
+      data.exp <- data.frame(temp$z)
+      rownames(data.exp) <- temp$SNP
+    } else {
+      data.exp <- data.exp[as.character(temp$SNP), , drop = F]
+      data.exp <- cbind(data.exp, temp$z)
+    }
     rm(temp)
-    gc()
+  }
+  colnames(data.exp) <- paste("exposure", 1:length(exp.files))
 
+  ## load outcome file
+  print(paste("loading data for outcome:", out.file, "..."))
+  load(out.file)
+  sel.SNPs <- intersect(sel.SNPs, dat$SNP)
+  temp <- dat[dat$SNP %in% sel.SNPs, ]
+  rm(dat)
+  ## harmonize
+  temp <- formatData(temp, "outcome")
+  temp.result <- suppressMessages(harmonise_data(ref.data.exp, temp))
+  temp.result <- temp.result[temp.result$mr_keep, ]
+  temp <- temp.result[, c(1, grep(".outcome", colnames(temp.result)))]
+  colnames(temp) <- gsub(".outcome", "", colnames(temp))
+  ref.data.exp <- temp.result[, c(1, grep(".exposure", colnames(temp.result)))]
+  #    colnames(data.sel) <- gsub(".exposure", "", colnames(data.sel))
+  rm(temp.result)
+  gc()
+  data.exp <- data.exp[as.character(ref.data.exp$SNP), , drop = F]
+  flip <- rep(1, nrow(data.exp))
+  flip[sign(data.exp[, 1]) != sign(ref.data.exp$beta.exposure/ref.data.exp$se.exposure)] <- -1
+#  print(sum(flip == -1))
+  data.exp <- flip * data.exp
+  sel.SNPs <- rownames(data.exp)
 
+  temp$z <- temp$beta/temp$se
+  data.exp <- data.exp[as.character(temp$SNP), , drop = F]
+  data.exp <- cbind(data.exp, temp$z)
+  colnames(data.exp) <- c(colnames(data.exp)[1:(ncol(data.exp) - 1)], "Outcome")
+  rm(temp)
+  gc()
+
+  if (no.clumping) {
+    temp <- as.matrix(data.exp)
+    covv <- t(temp) %*% temp / nrow(temp)
+    varr <- colMeans(temp^2)
+    corr <- t(covv / sqrt(varr))/sqrt(varr)
+  } else {
     if (!clump.directly) {
-        corr.list <- lapply(seed.vec, function(seed) {
-            set.seed(seed)
-            print(paste("Seed is:", seed))
-            data.sel <- data.frame(SNP = sel.SNPs, pval = runif(length(sel.SNPs)))
-            data.sel <- suppressMessages(plink_clump(data.sel, plink_exe, refdat))
-            data.exp1 <- data.exp[as.character(data.sel$SNP), , drop = F]
-            rm(data.sel)
-            corr <- cor(data.exp1)
-            rm(data.exp1)
-            gc()
-            return(corr)
-        })
-        corr <- Reduce("+", corr.list)/length(corr.list)
+      corr.list <- lapply(seed.vec, function(seed) {
+                          set.seed(seed)
+                          print(paste("Seed is:", seed))
+                          data.sel <- data.frame(SNP = sel.SNPs, pval = runif(length(sel.SNPs)))
+                          data.sel <- suppressMessages(plink_clump(data.sel, plink_exe, refdat))
+                          data.exp1 <- data.exp[as.character(data.sel$SNP), , drop = F]
+                          rm(data.sel)
+                          corr <- cor(data.exp1)
+                          rm(data.exp1)
+                          gc()
+                          return(corr)
+                   })
+      corr <- Reduce("+", corr.list)/length(corr.list)
     } else
-        corr <- cor(data.exp)
+      corr <- cor(data.exp)
+  }
 
 
-    return(corr)
+  return(corr)
 }
