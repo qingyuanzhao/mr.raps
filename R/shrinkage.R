@@ -511,7 +511,7 @@ mr.raps <- function(data, diagnostics = TRUE, over.dispersion = TRUE, loss.funct
 #'
 #' @import ggplot2 splines gridExtra
 #'
-mr.raps.publish <- function(data, weight.option = c("both", "MLE", "shrinkage")) {
+mr.raps.publish <- function(data, weight.option = c("both", "MLE", "shrinkage"), verbal = 1) {
 
     ## require(splines)
     ## require(ggplot2)
@@ -519,20 +519,22 @@ mr.raps.publish <- function(data, weight.option = c("both", "MLE", "shrinkage"))
     weight.option <- match.arg(weight.option)
 
     prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
-    out1 <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
-    out2 <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
-
-    weights <- out1$gamma.hat.z
-    std.resids <- out1$t
-    df <- max(round(length(weights) / 50), 3)
-    lm.test <- lm(std.resids ~ bs(weights, df) - 1)
-    p1 <- anova(lm.test)[[5]][1]
-
-    weights <- out2$gamma.hat.z
-    std.resids <- out2$t
-    df <- max(round(length(weights) / 50), 3)
-    lm.test <- lm(std.resids ~ bs(weights, df) - 1)
-    p2 <- anova(lm.test)[[5]][1]
+    if (weight.option != "shrinkage") {
+        out1 <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = FALSE)
+        weights <- out1$gamma.hat.z
+        std.resids <- out1$t
+        df <- max(round(length(weights) / 50), 3)
+        lm.test <- lm(std.resids ~ bs(weights, df) - 1)
+        p1 <- anova(lm.test)[[5]][1]
+    }
+    if (weight.option != "MLE") {
+        out2 <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, TRUE, "huber", shrinkage = TRUE, prior.param = prior.param)
+        weights <- out2$gamma.hat.z
+        std.resids <- out2$t
+        df <- max(round(length(weights) / 50), 3)
+        lm.test <- lm(std.resids ~ bs(weights, df) - 1)
+        p2 <- anova(lm.test)[[5]][1]
+    }
 
     if (weight.option == "both"){
         df <- data.frame(SNP = rep(data$SNP, 2),
@@ -565,8 +567,12 @@ mr.raps.publish <- function(data, weight.option = c("both", "MLE", "shrinkage"))
 
     out.plot <- ggplot(df) + aes(x = w, y = t) + geom_point(aes(shape = (pval.selection < 5e-8), color = (pval.selection < 5e-8), size = (pval.selection < 5e-8)), alpha = 0.7)
 
-    out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 1, aes(label = paste("Estimated effect:", as.character(signif(beta.hat, 2)))), data = df.label, size = 5)
-    out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 0.8, aes(label = paste("Heterogeneity p-value:", as.character(signif(p, 2)))), data = df.label, size = 5)
+    if (verbal >= 2) {
+        out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 1, aes(label = paste("Estimated effect:", as.character(signif(beta.hat, 2)))), data = df.label, size = 5)
+    }
+    if (verbal >= 1) {
+        out.plot <- out.plot + geom_text(x = max(df$w) * 0.5, y = max(df$t) * 0.8, aes(label = paste("Heterogeneity p-value:", as.character(signif(p, 2)))), data = df.label, size = 5)
+    }
     out.plot <- out.plot + coord_cartesian(ylim = range(df$t) * 1.1) + facet_grid(weight.method ~ .) + geom_smooth(method = "loess", span = 1/3) + xlab("Absolute weight") + ylab("Standardized residual") + scale_shape_discrete(guide = FALSE) + scale_color_discrete(guide = FALSE) + scale_size_discrete(guide = FALSE, range = c(1.5, 2.5)) + theme_bw(base_size = 18)
 
     qhnorm <- function(p) {
