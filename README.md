@@ -27,6 +27,6 @@ In May 2018, a new general function *mr.raps.shrinkage* is added. You can choose
 We are updating the [multivariate branch](https://github.com/qingyuanzhao/mr.raps/tree/multivariate) to accomdate multivariable MR and sample overlap.
 
 ## Getting help
-More information (including references and tutorials on Mendelian randomization) can be found on [this webpage](http://www.statslab.cam.ac.uk/~qz280/MR.html). 
+More information (including references and tutorials on Mendelian randomization) can be found on [this webpage](http://www.statslab.cam.ac.uk/~qz280/post/mr-software/). 
 
 Please report issues and suggestions on the software using the [GitHub issues tracker](https://github.com/qingyuanzhao/mr.raps/issues).
