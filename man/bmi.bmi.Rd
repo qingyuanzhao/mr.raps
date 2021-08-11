@@ -4,7 +4,9 @@
 \name{bmi.bmi}
 \alias{bmi.bmi}
 \title{"Effect" of Body Mass Index (BMI) on Body Mass Index (BMI)}
-\format{A \code{data.frame} with 812 rows and 28 variables.}
+\format{
+A \code{data.frame} with 812 rows and 28 variables.
+}
 \usage{
 data(bmi.bmi)
 }

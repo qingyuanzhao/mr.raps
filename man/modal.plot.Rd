@@ -4,13 +4,23 @@
 \alias{modal.plot}
 \title{Modal plot to detect heterogeneity}
 \usage{
-modal.plot(b_exp = NULL, b_out = NULL, se_exp = NULL, se_out = NULL,
-  data = NULL, k = 1.5, weight.option = c("MLE", "shrinkage"))
+modal.plot(
+  b_exp = NULL,
+  b_out = NULL,
+  se_exp = NULL,
+  se_out = NULL,
+  data = NULL,
+  k = 1.5,
+  weight.option = c("MLE", "shrinkage"),
+  beta.range = NULL
+)
 }
 \arguments{
 \item{data}{Alternatively, dataset can be passed by the argument \code{data}, which must be a data frame with columns \code{beta.exposure}, \code{beta.outcome}, \code{se.exposure}, \code{se.outcome}.}
 
 \item{k}{Locality of the robust likelihood (smaller \code{k} has more sensitivity for mode detection)}
+
+\item{beta.range}{range of beta in the plot}
 }
 \description{
 Modal plot to detect heterogeneity

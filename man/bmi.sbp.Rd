@@ -4,7 +4,9 @@
 \name{bmi.sbp}
 \alias{bmi.sbp}
 \title{Effect of Body Mass Index (BMI) on Systolic Blood Pressure (SBP)}
-\format{A \code{data.frame} with 160 rows and 29 variables.}
+\format{
+A \code{data.frame} with 160 rows and 29 variables.
+}
 \usage{
 data(bmi.sbp)
 }
