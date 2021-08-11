@@ -495,7 +495,7 @@ mr.raps <- function(data, diagnostics = TRUE, over.dispersion = TRUE, loss.funct
         weights <- out$gamma.hat.z
         std.resids <- out$t
         df <- max(round(length(weights) / 20), 3)
-        lm.test <- lm(std.resids ~ bs(weights, df) - 1)
+        lm.test <- lm(std.resids ~ bs(weights, knots = quantile(weights, 1:df/(df+1))) - 1)
         print(anova(lm.test))
 
         ## cat("Showing diagnostic plot ...\n")
@@ -524,7 +524,7 @@ mr.raps.publish <- function(data, weight.option = c("both", "MLE", "shrinkage"),
         weights <- out1$gamma.hat.z
         std.resids <- out1$t
         df <- max(round(length(weights) / 50), 3)
-        lm.test <- lm(std.resids ~ bs(weights, df) - 1)
+        lm.test <- lm(std.resids ~ bs(weights, knots = quantile(weights, 1:df/(df+1))) - 1)
         p1 <- anova(lm.test)[[5]][1]
     }
     if (weight.option != "MLE") {
@@ -532,7 +532,7 @@ mr.raps.publish <- function(data, weight.option = c("both", "MLE", "shrinkage"),
         weights <- out2$gamma.hat.z
         std.resids <- out2$t
         df <- max(round(length(weights) / 50), 3)
-        lm.test <- lm(std.resids ~ bs(weights, df) - 1)
+        lm.test <- lm(std.resids ~ bs(weights, knots = quantile(weights, 1:df/(df+1))) - 1)
         p2 <- anova(lm.test)[[5]][1]
     }
 

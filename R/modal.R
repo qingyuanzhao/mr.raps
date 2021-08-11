@@ -2,6 +2,7 @@
 #'
 #' @param data Alternatively, dataset can be passed by the argument \code{data}, which must be a data frame with columns \code{beta.exposure}, \code{beta.outcome}, \code{se.exposure}, \code{se.outcome}.
 #' @param k Locality of the robust likelihood (smaller \code{k} has more sensitivity for mode detection)
+#' @param beta.range range of beta in the plot
 #'
 #' @export
 #'
@@ -21,7 +22,7 @@
 #'
 #' modal.plot(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome)
 #'
-modal.plot <- function(b_exp = NULL, b_out = NULL, se_exp = NULL, se_out = NULL, data = NULL, k = 1.5, weight.option = c("MLE", "shrinkage")) {
+modal.plot <- function(b_exp = NULL, b_out = NULL, se_exp = NULL, se_out = NULL, data = NULL, k = 1.5, weight.option = c("MLE", "shrinkage"), beta.range = NULL) {
 
     weight.option <- match.arg(weight.option)
 
@@ -96,9 +97,14 @@ modal.plot <- function(b_exp = NULL, b_out = NULL, se_exp = NULL, se_out = NULL,
     }
 
     fit <- mr.raps.mle(b_exp, b_out, se_exp, se_out)
-    beta.seq <- c(-Inf, seq(fit$beta.hat - 25 * fit$beta.se,
-                            fit$beta.hat + 25 * fit$beta.se,
-                            length = 50))
+    if (is.null(beta.range)) {
+        beta.min <- fit$beta.hat - 25 * fit$beta.se
+        beta.max <- fit$beta.hat + 25 * fit$beta.se
+    } else {
+        beta.min <- beta.range[1]
+        beta.max <- beta.range[2]
+    }
+    beta.seq <- c(-Inf, seq(beta.min, beta.max, length = 50))
 
     rll <- rep(0, length(beta.seq) - 1)
     for (i in 2:length(beta.seq)) {
