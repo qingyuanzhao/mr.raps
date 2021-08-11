@@ -196,10 +196,14 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #'
 #' @importFrom rootSolve multiroot
 #'
-mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), empirical.variability = FALSE, num.init = 10, multiple.root.warning = 1) {
+mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), empirical.variability = FALSE, position = NULL, bandwidth = 10^6, num.init = 10, multiple.root.warning = 1) {
 
     if (sum(b_exp^2 / se_exp^2) < length(b_exp) - sqrt(length(b_exp))) {
         message("WARNING: The average F-statistic is very small and the causal effect may be non-identified.")
+    }
+
+    if (shrinkage & is.null(prior.param)) {
+        prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
     }
 
     se.method <- match.arg(se.method)
@@ -297,6 +301,10 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         }
     }
 
+    variability.weight <- function(pos) { ## Newey-West triangular kernel
+        pmax(1 - abs(outer(pos, pos, "-")) / bandwidth, 0)
+    }
+
     if (!over.dispersion) {
         res1 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "l2")
         res2 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "huber")
@@ -378,7 +386,13 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         if (!empirical.variability) {
             V1 <- c1 * sum(gamma.hat^2 / v)
         } else {
-            V1 <- sum(psi(estimated.param, individual = TRUE)^2)
+            score <- psi(estimated.param, individual = TRUE)
+            if (is.null(position)) {
+                V1 <- sum(score^2)
+            } else {
+                W <- variability.weight(position)
+                V1  <- t(score) %*% W %*% score
+            }
         }
         V2 <- sum((get.gamma.hat(beta, tau2, deriv = "beta") * rho(t, deriv = 1) + gamma.hat * delta * (- b_exp) / sqrt(v)) / sqrt(v))
         beta.se <- sqrt(V1 / V2^2)
@@ -394,7 +408,12 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
             V1 <- diag(c(c1 * sum(gamma.hat^2 / v), c2 * sum(1 / v^2)))
         } else {
             score <- psi(estimated.param, individual = TRUE)
-            V1 <- t(score) %*% score
+            if (is.null(position)) {
+                V1 <- t(score) %*% score
+            } else {
+                W <- variability.weight(position)
+                V1  <- t(score) %*% W %*% score
+            }
         }
         V2 <- matrix(c(sum((get.gamma.hat(beta, tau2, deriv = "beta") * rho(t, deriv = 1) + gamma.hat * delta * (- b_exp) / sqrt(v)) / sqrt(v)),
                        0,
@@ -500,8 +519,8 @@ plot.mr.raps <- function(x, ...) {
 #' }
 #'
 mr.raps <- function(data, diagnostics = TRUE, over.dispersion = TRUE, loss.function = "huber", ...) {
-    prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
-    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, over.dispersion, loss.function, prior.param = prior.param, diagnostics = diagnostics, ...)
+
+    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, over.dispersion, loss.function, diagnostics = diagnostics, ...)
 
     if (diagnostics) {
         cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))
