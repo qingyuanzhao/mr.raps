@@ -160,6 +160,7 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #' @inheritParams mr.raps.mle
 #' @param shrinkage If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy. If TRUE, \code{prior.param} must be provided.
 #' @param prior.param Parameters of the Gaussian spike-and-slab prior
+#' @param empirical.variability When using the sandwich standard error, Whether the variability should be estimated by the empirical variance of the score.
 #' @param num.init Number of initializations.
 #' @param multiple.root.warning How to handle multiple roots of the estimating equations? When this happens, the results of \code{mr.raps.shrinkage} are less reliable. This parameter can take three values: 0---nothing will be done; 1---a warning is given; 2---an error is given. Default is 1.
 #'
@@ -195,7 +196,7 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #'
 #' @importFrom rootSolve multiroot
 #'
-mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), num.init = 10, multiple.root.warning = 1) {
+mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), empirical.variability = FALSE, num.init = 10, multiple.root.warning = 1) {
 
     if (sum(b_exp^2 / se_exp^2) < length(b_exp) - sqrt(length(b_exp))) {
         message("WARNING: The average F-statistic is very small and the causal effect may be non-identified.")
@@ -270,7 +271,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         }
     }
 
-    psi <- function(param) {
+    psi <- function(param, individual = FALSE) {
         if (!over.dispersion) {
             beta <- param[1]
             tau2 <- 0
@@ -281,10 +282,16 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         t <- get.t(beta, tau2)
         gamma.hat <- get.gamma.hat(beta, tau2)
         v <- beta^2 * se_exp^2 + se_out^2 + tau2
-        psi1 <- sum(gamma.hat * rho(t, deriv = 1) / sqrt(v))
+        psi1 <- gamma.hat * rho(t, deriv = 1) / sqrt(v)
+        if (!individual) {
+            psi1 <- sum(psi1)
+        }
         if (over.dispersion) {
-            psi2 <- sum((t * rho(t, deriv = 1) - delta) / v)
-            return(c(psi1, psi2))
+            psi2 <- (t * rho(t, deriv = 1) - delta) / v
+            if (!individual) {
+                psi2 <- sum(psi2)
+            }
+            return(cbind(psi1, psi2))
         } else {
             return(psi1)
         }
@@ -368,7 +375,11 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         t <- get.t(beta, tau2)
         gamma.hat <- get.gamma.hat(beta, tau2)
         v <- beta^2 * se_exp^2 + se_out^2 + tau2
-        V1 <- c1 * sum(gamma.hat^2 / v)
+        if (!empirical.variability) {
+            V1 <- c1 * sum(gamma.hat^2 / v)
+        } else {
+            V1 <- sum(psi(estimated.param, individual = TRUE)^2)
+        }
         V2 <- sum((get.gamma.hat(beta, tau2, deriv = "beta") * rho(t, deriv = 1) + gamma.hat * delta * (- b_exp) / sqrt(v)) / sqrt(v))
         beta.se <- sqrt(V1 / V2^2)
         tau2.se <- 0
@@ -379,7 +390,12 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         gamma.hat <- get.gamma.hat(beta, tau2)
         v <- beta^2 * se_exp^2 + se_out^2 + tau2
 
-        V1 <- diag(c(c1 * sum(gamma.hat^2 / v), c2 * sum(1 / v^2)))
+        if (!empirical.variability) {
+            V1 <- diag(c(c1 * sum(gamma.hat^2 / v), c2 * sum(1 / v^2)))
+        } else {
+            score <- psi(estimated.param, individual = TRUE)
+            V1 <- t(score) %*% score
+        }
         V2 <- matrix(c(sum((get.gamma.hat(beta, tau2, deriv = "beta") * rho(t, deriv = 1) + gamma.hat * delta * (- b_exp) / sqrt(v)) / sqrt(v)),
                        0,
                        sum(get.gamma.hat(beta, tau2, "tau2") * rho(t, deriv = 1) / sqrt(v)),

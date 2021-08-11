@@ -50,6 +50,8 @@ mr.raps.shrinkage(
 
 \item{se.method}{How should the standard error be estimated? Either by sandwich variance formula (default and recommended) or the bootstrap.}
 
+\item{empirical.variability}{When using the sandwich standard error, Whether the variability should be estimated by the empirical variance of the score.}
+
 \item{num.init}{Number of initializations.}
 
 \item{multiple.root.warning}{How to handle multiple roots of the estimating equations? When this happens, the results of \code{mr.raps.shrinkage} are less reliable. This parameter can take three values: 0---nothing will be done; 1---a warning is given; 2---an error is given. Default is 1.}
