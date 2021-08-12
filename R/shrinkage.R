@@ -138,15 +138,15 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
     stopifnot(length(p) == length(mu) && length(p) == length(sigma.prior))
     stopifnot(deriv %in% c(0, 1))
 
-    mu.tilde <- outer(z/sigma^2, mu/sigma.prior^2, "+") / outer(1/sigma^2, 1/sigma.prior^2, "+")
-    p.tilde <- t(t(dnorm(outer(z, mu, "-"), sd = sqrt(outer(sigma^2, sigma.prior^2, "+")))) * p)
+    mu.tilde <- outer(mu/sigma.prior^2, z/sigma^2, "+") / outer(1/sigma.prior^2, 1/sigma^2, "+")
+    p.tilde <- dnorm(outer(mu, z, "-"), sd = sqrt(outer(sigma.prior^2, sigma^2, "+"))) * p
 
     if (deriv == 0) {
-        return(rowSums(p.tilde * mu.tilde) / rowSums(p.tilde))
+        return(colSums(p.tilde * mu.tilde) / colSums(p.tilde))
     } else {
-        diff.mu.tilde <- 1 / (1 + outer(sigma^2, sigma.prior^2, "/"))
-        diff.p.tilde <- - p.tilde * outer(z, mu, "-") / outer(sigma^2, sigma.prior^2, "+")
-        return(rowSums(diff.p.tilde * mu.tilde + p.tilde * diff.mu.tilde) / rowSums(p.tilde) - rowSums(p.tilde * mu.tilde) * rowSums(diff.p.tilde) / rowSums(p.tilde)^2)
+        diff.mu.tilde <- 1 / (1 + 1 / outer(sigma.prior^2, sigma^2, "/"))
+        diff.p.tilde <- p.tilde * outer(mu, z, "-") / outer(sigma.prior^2, sigma^2, "+")
+        return(colSums(diff.p.tilde * mu.tilde + p.tilde * diff.mu.tilde) / colSums(p.tilde) - colSums(p.tilde * mu.tilde) * colSums(diff.p.tilde) / colSums(p.tilde)^2)
     }
 
 }
@@ -194,7 +194,10 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #'
 mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), empirical.variability = FALSE, position = NULL, bandwidth = 10^6, num.init = 10, multiple.root.warning = 1) {
 
-    if (sum(b_exp^2 / se_exp^2) < length(b_exp) - sqrt(length(b_exp))) {
+    var_exp <- se_exp^2
+    var_out <- se_out^2
+
+    if (sum(b_exp^2 / var_exp) < length(b_exp) - sqrt(length(b_exp))) {
         message("WARNING: The average F-statistic is very small and the causal effect may be non-identified.")
     }
 
@@ -235,17 +238,17 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     c3 <- integrate(function(x) x^2 * rho(x, deriv = 2) * dnorm(x), -Inf, Inf)$value
 
     get.t <- function(beta, tau2) {
-        (b_out - b_exp * beta) / sqrt(tau2 + se_out^2 + se_exp^2 * beta^2)
+        (b_out - b_exp * beta) / sqrt(tau2 + var_out + var_exp * beta^2)
     }
 
     get.gamma.hat <- function(beta, tau2, deriv = c("0", "beta", "tau2")) {
         deriv <- match.arg(deriv, c("0", "beta", "tau2"))
-        gamma.mle <- (b_exp/ se_exp^2 + beta * b_out/ (se_out^2 + tau2)) / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+        gamma.mle <- (b_exp/ var_exp + beta * b_out/ (var_out + tau2)) / (1 / var_exp + beta^2 / (var_out + tau2))
         gamma.mle[se_exp == 0] <- b_exp
         if (deriv == "0") {
             if (shrinkage) {
                 a <- posterior.mean(gamma.mle / se_exp,
-                                    sqrt(1 / (1 + beta^2 * se_exp^2 / (se_out^2 + tau2))),
+                                    sqrt(1 / (1 + beta^2 * var_exp / (var_out + tau2))),
                                     prior.param$p, prior.param$mu, prior.param$sigma)
                 gamma.hat <- a * se_exp
             } else {
@@ -255,14 +258,14 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         }
 
         if (deriv == "beta") {
-            gamma.mle.deriv <- (b_out/ (se_out^2 + tau2)) / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+            gamma.mle.deriv <- (b_out/ (var_out + tau2)) / (1 / var_exp + beta^2 / (var_out + tau2))
         } else { ## deriv == "tau2"
-            gamma.mle.deriv <- - beta * b_out / (se_out^2 + tau2)^2 / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+            gamma.mle.deriv <- - beta * b_out / (var_out + tau2)^2 / (1 / var_exp + beta^2 / (var_out + tau2))
         }
         if (shrinkage) {
             shrinkage.deriv <- posterior.mean(
                 gamma.mle / se_exp,
-                sqrt(1 / (1 + beta^2 * se_exp^2 / (se_out^2 + tau2))),
+                sqrt(1 / (1 + beta^2 * var_exp / (var_out + tau2))),
                 prior.param$p, prior.param$mu, prior.param$sigma,
                 deriv = 1)
             return(gamma.mle.deriv * shrinkage.deriv)
@@ -281,7 +284,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         }
         t <- get.t(beta, tau2)
         gamma.hat <- get.gamma.hat(beta, tau2)
-        v <- beta^2 * se_exp^2 + se_out^2 + tau2
+        v <- beta^2 * var_exp + var_out + tau2
         psi1 <- gamma.hat * rho(t, deriv = 1) / sqrt(v)
         if (!individual) {
             psi1 <- sum(psi1)
@@ -378,7 +381,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         tau2 <- 0
         t <- get.t(beta, tau2)
         gamma.hat <- get.gamma.hat(beta, tau2)
-        v <- beta^2 * se_exp^2 + se_out^2 + tau2
+        v <- beta^2 * var_exp + var_out + tau2
         if (!empirical.variability) {
             V1 <- c1 * sum(gamma.hat^2 / v)
         } else {
@@ -398,7 +401,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         tau2 <- estimated.param[2]
         t <- get.t(beta, tau2)
         gamma.hat <- get.gamma.hat(beta, tau2)
-        v <- beta^2 * se_exp^2 + se_out^2 + tau2
+        v <- beta^2 * var_exp + var_out + tau2
 
         if (!empirical.variability) {
             V1 <- diag(c(c1 * sum(gamma.hat^2 / v), c2 * sum(1 / v^2)))
@@ -425,7 +428,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     ## qqnorm(t)
     ## abline(0, 1)
     gamma.hat <- get.gamma.hat(beta, tau2)
-    v <- 1 / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+    v <- 1 / (1 / var_exp + beta^2 / (var_out + tau2))
     gamma.hat.z <- gamma.hat / sqrt(v)
     t <- t * sign(gamma.hat.z)
     gamma.hat.z <- abs(gamma.hat.z)
@@ -437,7 +440,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         ## Heterogeneity test
 
         ## Use MLE instead of shrinked gamma.hat usually has more power
-        gamma.mle <- abs((b_exp/ se_exp^2 + beta * b_out/ (se_out^2 + tau2)) / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2)))
+        gamma.mle <- abs((b_exp/ var_exp + beta * b_out/ (var_out + tau2)) / (1 / var_exp + beta^2 / (var_out + tau2)))
         gamma.mle[se_exp == 0] <- abs(b_exp)
 
         weights <- gamma.mle
