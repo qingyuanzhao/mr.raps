@@ -156,18 +156,21 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #' @inheritParams mr.raps.mle
 #' @param shrinkage If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy. If TRUE, \code{prior.param} must be provided.
 #' @param prior.param Parameters of the Gaussian spike-and-slab prior
-#' @param empirical.variability When using the sandwich standard error, Whether the variability should be estimated by the empirical variance of the score.
+#' @param variability.method When using the sandwich standard error, whether the variability should be estimated by the empirical variance of the score.
+#' @param position (Pseudo-)Position of the instruments on the genome.
 #' @param num.init Number of initializations.
 #' @param multiple.root.warning How to handle multiple roots of the estimating equations? When this happens, the results of \code{mr.raps.shrinkage} are less reliable. This parameter can take three values: 0---nothing will be done; 1---a warning is given; 2---an error is given. Default is 1.
 #'
 #' @details
-#' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle}. See Efron and Hinkley (1978) referenced below.
+#' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle} (Efron and Hinkley, 1978). When using the sandwich formula to obtain the standard error, the variance matrix of the score can be estimated using the theoretical formula if the instruments are independent. When the insturments are not independent, the variability matrix is obtained using the Newey-West estimator or window subsampling (Lumley and Heagerty, 1999).
 #'
 #' Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.mle} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization. When the program does not find a finite solution, consider increasing the value of \code{num.init}.
 #'
 #' @references
-#' Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2018). A genome-wide design and an empirical partially Bayes approach to increase the power of Mendelian randomization, with application to the effect of blood lipids on cardiovascular disease. <arXiv:1804.07371>.
+#' Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2019). Powerful three-sample genome-wide design and robust statistical inference in summary-data Mendelian randomization. International Journal of Epidemiology, 48(5), 1478--1492.
 #' Efron, B. and Hinkley, D. V. (1978). Assessing the accuracy of the maximum likelihood estimator: Observed versus expected Fisher information. Biometrika, 65(3), 457--483.
+#' Whitney K. Newey and Kenneth D. West. (1987). A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix. Econometrica, 55(3), 703--708.
+#' Thomas Lumley and Patrick Heagerty (1999). Weighted Empirical Adaptive Variance Estimators for Correlated Data Regression. : Journal of the Royal Statistical Society (Series B, Statistical Methodology), 61(2), 459--477.
 #'
 #' @examples
 #'
@@ -192,7 +195,7 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #'
 #' @importFrom rootSolve multiroot
 #'
-mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), empirical.variability = FALSE, position = NULL, bandwidth = 10^6, num.init = 10, multiple.root.warning = 1) {
+mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), variability.method = c("theoretical", "window-subsampling", "Newey-West"), position = NULL, bandwidth = 10^6, num.init = 10, multiple.root.warning = 1) {
 
     var_exp <- se_exp^2
     var_out <- se_out^2
@@ -236,6 +239,8 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     c1 <- integrate(function(x) rho(x, deriv = 1)^2 * dnorm(x), -Inf, Inf)$value
     c2 <- integrate(function(x) x^2 * rho(x, deriv = 1)^2 * dnorm(x), -Inf, Inf)$value - delta^2
     c3 <- integrate(function(x) x^2 * rho(x, deriv = 2) * dnorm(x), -Inf, Inf)$value
+
+    variability.method <- match.arg(variability.method)
 
     get.t <- function(beta, tau2) {
         (b_out - b_exp * beta) / sqrt(tau2 + var_out + var_exp * beta^2)
@@ -304,9 +309,27 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         pmax(1 - abs(outer(pos, pos, "-")) / bandwidth, 0)
     }
 
+    get.v1 <- function(score, pos) {
+        if (variability.method == "Newey-West") {
+            W <- variability.weight(pos)
+            V1 <- t(score) %*% W %*% score
+        } else if (variability.method == "window-subsampling") {
+            B <- min(10000, length(pos))
+            s <- sample(pos, B)
+            d <- ifelse(over.dispersion, 2, 1)
+            V1 <- matrix(0, d, d)
+            for (i in 1:B) {
+                subsample <- (pos >= s[i] - bandwidth) & (pos <= s[i] + bandwidth)
+                V1 <- V1 + t(score[subsample, , drop = FALSE]) %*% score[subsample, , drop = FALSE] / sqrt(sum(subsample))
+            }
+            V1 <- V1 * length(pos) / B
+        }
+        V1
+    }
+
     if (!over.dispersion) {
-        res1 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "l2")
-        res2 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "huber")
+        res1 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "l2", suppress.warning = TRUE)
+        res2 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "huber", suppress.warning = TRUE)
         init.param <- c(res1$beta.hat, res2$beta.hat)
         init.param.perturbed <-
             init.param[rep(c(1,2), each = num.init - 1)] +
@@ -343,13 +366,12 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         }
     }
 
-    beta.init <- mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function)$beta.hat
+    ## beta.init <- mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function, suppress.warning = TRUE)$beta.hat
+    beta.init <- res2$beta.hat
     j <- which.min(abs(beta - beta.init[1]))
     if (length(j) == 0) {
         warning("Cannot find solution with finite over.dispersion. Using tau2 = 0.")
-        return(mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnostics))
-        ## res <- multiroot(function(beta) psi(c(beta, 0))[1], init.param[1])
-        ## estimated.param <- c(res$root, 0)
+        return(mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnostics, se.method, variability.method, position, bandwidth, num.init, multiple.root.warning))
     }
 
     if (multiple.root.warning > 0) {
@@ -382,15 +404,14 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         t <- get.t(beta, tau2)
         gamma.hat <- get.gamma.hat(beta, tau2)
         v <- beta^2 * var_exp + var_out + tau2
-        if (!empirical.variability) {
+        if (variability.method == "theoretical") {
             V1 <- c1 * sum(gamma.hat^2 / v)
         } else {
             score <- psi(estimated.param, individual = TRUE)
             if (is.null(position)) {
                 V1 <- sum(score^2)
             } else {
-                W <- variability.weight(position)
-                V1  <- t(score) %*% W %*% score
+                V1 <- get.v1(score, position)
             }
         }
         V2 <- sum((get.gamma.hat(beta, tau2, deriv = "beta") * rho(t, deriv = 1) + gamma.hat * delta * (- b_exp) / sqrt(v)) / sqrt(v))
@@ -403,15 +424,14 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         gamma.hat <- get.gamma.hat(beta, tau2)
         v <- beta^2 * var_exp + var_out + tau2
 
-        if (!empirical.variability) {
+        if (variability.method == "theoretical") {
             V1 <- diag(c(c1 * sum(gamma.hat^2 / v), c2 * sum(1 / v^2)))
         } else {
             score <- psi(estimated.param, individual = TRUE)
             if (is.null(position)) {
                 V1 <- t(score) %*% score
             } else {
-                W <- variability.weight(position)
-                V1  <- t(score) %*% W %*% score
+                V1 <- get.v1(score, position)
             }
         }
         V2 <- matrix(c(sum((get.gamma.hat(beta, tau2, deriv = "beta") * rho(t, deriv = 1) + gamma.hat * delta * (- b_exp) / sqrt(v)) / sqrt(v)),

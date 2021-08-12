@@ -221,7 +221,7 @@ mr.raps.overdispersed <- function(b_exp, b_out, se_exp, se_out, initialization =
     initialization <- match.arg(initialization, c("simple", "mode"))
     if (pruning) {
         s <- se_exp > 10 * median(se_exp)
-        if (sum(s) > 0) {
+        if (sum(s) > 0 & !suppress.warning) {
             print(paste("Pruning extraordinarily large se_exp:", which(s)))
         }
         b_exp <- b_exp[!s]
@@ -451,7 +451,7 @@ mr.raps.overdispersed.robust <- function(b_exp, b_out, se_exp, se_out, loss.func
 
     if (pruning) {
         s <- se_exp > 10 * median(se_exp)
-        if (sum(s) > 0) {
+        if (sum(s) > 0 & !suppress.warning) {
             print(paste("Pruning extraordinarily large se_exp:", which(s)))
         }
         b_exp <- b_exp[!s]

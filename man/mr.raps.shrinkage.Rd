@@ -18,7 +18,7 @@ mr.raps.shrinkage(
   prior.param = NULL,
   diagnostics = FALSE,
   se.method = c("sandwich", "bootstrap"),
-  empirical.variability = FALSE,
+  variability.method = c("theoretical", "window-subsampling", "Newey-West"),
   position = NULL,
   bandwidth = 10^6,
   num.init = 10,
@@ -52,7 +52,9 @@ mr.raps.shrinkage(
 
 \item{se.method}{How should the standard error be estimated? Either by sandwich variance formula (default and recommended) or the bootstrap.}
 
-\item{empirical.variability}{When using the sandwich standard error, Whether the variability should be estimated by the empirical variance of the score.}
+\item{variability.method}{When using the sandwich standard error, whether the variability should be estimated by the empirical variance of the score.}
+
+\item{position}{(Pseudo-)Position of the instruments on the genome.}
 
 \item{num.init}{Number of initializations.}
 
@@ -66,7 +68,7 @@ mr.raps.shrinkage(
 Main function for RAPS (shrinkage weights)
 }
 \details{
-\code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle}. See Efron and Hinkley (1978) referenced below.
+\code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle} (Efron and Hinkley, 1978). When using the sandwich formula to obtain the standard error, the variance matrix of the score can be estimated using the theoretical formula if the instruments are independent. When the insturments are not independent, the variability matrix is obtained using the Newey-West estimator or window subsampling (Lumley and Heagerty, 1999).
 
 Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.mle} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization. When the program does not find a finite solution, consider increasing the value of \code{num.init}.
 }
@@ -98,6 +100,8 @@ prior.param = prior.param)
 
 }
 \references{
-Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2018). A genome-wide design and an empirical partially Bayes approach to increase the power of Mendelian randomization, with application to the effect of blood lipids on cardiovascular disease. <arXiv:1804.07371>.
+Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2019). Powerful three-sample genome-wide design and robust statistical inference in summary-data Mendelian randomization. International Journal of Epidemiology, 48(5), 1478--1492.
 Efron, B. and Hinkley, D. V. (1978). Assessing the accuracy of the maximum likelihood estimator: Observed versus expected Fisher information. Biometrika, 65(3), 457--483.
+Whitney K. Newey and Kenneth D. West. (1987). A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix. Econometrica, 55(3), 703--708.
+Thomas Lumley and Patrick Heagerty (1999). Weighted Empirical Adaptive Variance Estimators for Correlated Data Regression. : Journal of the Royal Statistical Society (Series B, Statistical Methodology), 61(2), 459--477.
 }
