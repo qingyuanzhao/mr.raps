@@ -310,6 +310,9 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     }
 
     get.v1 <- function(score, pos) {
+        if (is.vector(score)) {
+            score <- matrix(score, ncol = 1)
+        }
         if (variability.method == "Newey-West") {
             W <- variability.weight(pos)
             V1 <- t(score) %*% W %*% score
