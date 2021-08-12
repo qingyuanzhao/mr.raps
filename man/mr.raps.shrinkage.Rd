@@ -19,6 +19,8 @@ mr.raps.shrinkage(
   diagnostics = FALSE,
   se.method = c("sandwich", "bootstrap"),
   empirical.variability = FALSE,
+  position = NULL,
+  bandwidth = 10^6,
   num.init = 10,
   multiple.root.warning = 1
 )

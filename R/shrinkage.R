@@ -128,31 +128,27 @@ fit.mixture.model <- function(z, n = 2, ntry = 20, force.mu.zero = TRUE, diagnos
 #' @export
 #'
 posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
-    if (length(z) > 1) {
-        if (length(sigma) == 1) {
-            sigma <- rep(sigma, length(z))
-        }
-        stopifnot(length(z) == length(sigma))
-        return(sapply(1:length(z), function(k)
-            posterior.mean(z[k], sigma[k], p, mu, sigma.prior, deriv)))
-    }
-    if (length(p) == 1){
+
+    if (length(p) == 1) {
         p <- c(p, 1 - p)
+    }
+    if (length(sigma) == 1) {
+        sigma <- rep(sigma, length(z))
     }
     stopifnot(length(p) == length(mu) && length(p) == length(sigma.prior))
     stopifnot(deriv %in% c(0, 1))
 
-    mu.tilde <- (z/sigma^2 + mu/sigma.prior^2) / (1/sigma^2 + 1/sigma.prior^2)
-    ## sigma.tilde <- sqrt(1/(1/sigma^2 + 1/sigma.prior^2)) ## not needed
-    p.tilde <- p * dnorm(z, mu, sqrt(sigma^2 + sigma.prior^2))
+    mu.tilde <- outer(z/sigma^2, mu/sigma.prior^2, "+") / outer(1/sigma^2, 1/sigma.prior^2, "+")
+    p.tilde <- t(t(dnorm(outer(z, mu, "-"), sd = sqrt(outer(sigma^2, sigma.prior^2, "+")))) * p)
 
     if (deriv == 0) {
-        return(sum(p.tilde * mu.tilde) / sum(p.tilde))
+        return(rowSums(p.tilde * mu.tilde) / rowSums(p.tilde))
     } else {
-        diff.mu.tilde <- (1/sigma^2) / (1/sigma^2 + 1/sigma.prior^2)
-        diff.p.tilde <- - p * dnorm(z, mu, sqrt(sigma^2 + sigma.prior^2)) * (z - mu) / (sigma^2 + sigma.prior^2)
-        return(sum(diff.p.tilde * mu.tilde + p.tilde * diff.mu.tilde) / sum(p.tilde) - sum(p.tilde * mu.tilde) * sum(diff.p.tilde) / sum(p.tilde)^2)
+        diff.mu.tilde <- 1 / (1 + outer(sigma^2, sigma.prior^2, "/"))
+        diff.p.tilde <- - p.tilde * outer(z, mu, "-") / outer(sigma^2, sigma.prior^2, "+")
+        return(rowSums(diff.p.tilde * mu.tilde + p.tilde * diff.mu.tilde) / rowSums(p.tilde) - rowSums(p.tilde * mu.tilde) * rowSums(diff.p.tilde) / rowSums(p.tilde)^2)
     }
+
 }
 
 #' Main function for RAPS (shrinkage weights)
