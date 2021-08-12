@@ -320,9 +320,10 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
             V1 <- matrix(0, d, d)
             for (i in 1:B) {
                 subsample <- (pos >= s[i] - bandwidth) & (pos <= s[i] + bandwidth)
-                V1 <- V1 + t(score[subsample, , drop = FALSE]) %*% score[subsample, , drop = FALSE] / sqrt(sum(subsample))
+                score.subsample <- colSums(score[subsample, , drop = FALSE])
+                V1 <- V1 + score.subsample %*% t(score.subsample) / sum(subsample)
             }
-            V1 <- V1 * length(pos) / B
+            V1 <- V1 / B * length(pos)
         }
         V1
     }
