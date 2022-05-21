@@ -4,13 +4,15 @@
 \alias{mr.raps.scatterplot}
 \title{Scatter plot with annotation}
 \usage{
-mr.raps.scatterplot(data, annotate = TRUE, annotate.genes = NULL,
+mr.raps.scatterplot(
+  data,
+  annotate = TRUE,
+  annotate.genes = NULL,
   rank.method = c("pval.both", "pval.selection", "pval.exposure"),
-<<<<<<< HEAD
-  num.snps = 10, fit = mr.raps(data, FALSE), alpha = 0.8)
-=======
-  num.snps = 10, fit = mr.raps(data, FALSE))
->>>>>>> master
+  num.snps = 10,
+  fit = mr.raps(data, FALSE),
+  alpha = 0.8
+)
 }
 \arguments{
 \item{data}{A data frame (see \code{\link{mr.raps}}).}

@@ -9,30 +9,62 @@
 \alias{mr.raps.overdispersed.robust}
 \title{Main function for RAPS (MLE weights)}
 \usage{
-mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE,
-  loss.function = c("l2", "huber", "tukey"), diagnostics = FALSE,
-  pruning = TRUE, se.method = c("sandwich", "bootstrap"),
+mr.raps.mle(
+  b_exp,
+  b_out,
+  se_exp,
+  se_out,
+  over.dispersion = FALSE,
+  loss.function = c("l2", "huber", "tukey"),
+  diagnostics = FALSE,
+  pruning = TRUE,
+  se.method = c("sandwich", "bootstrap"),
   k = switch(loss.function[1], l2 = NULL, huber = 1.345, tukey = 4.685),
-  B = 1000, suppress.warning = FALSE)
+  B = 1000,
+  suppress.warning = FALSE
+)
 
 mr.raps.mle.all(b_exp, b_out, se_exp, se_out)
 
 mr.raps.simple(b_exp, b_out, se_exp, se_out, diagnostics = FALSE)
 
-mr.raps.overdispersed(b_exp, b_out, se_exp, se_out,
-  initialization = c("simple", "mode"), suppress.warning = FALSE,
-  diagnostics = FALSE, pruning = TRUE, niter = 20,
-  tol = .Machine$double.eps^0.5)
+mr.raps.overdispersed(
+  b_exp,
+  b_out,
+  se_exp,
+  se_out,
+  initialization = c("simple", "mode"),
+  suppress.warning = FALSE,
+  diagnostics = FALSE,
+  pruning = TRUE,
+  niter = 20,
+  tol = .Machine$double.eps^0.5
+)
 
-mr.raps.simple.robust(b_exp, b_out, se_exp, se_out, loss.function = c("huber",
-  "tukey"), k = switch(loss.function[1], huber = 1.345, tukey = 4.685),
-  diagnostics = FALSE)
+mr.raps.simple.robust(
+  b_exp,
+  b_out,
+  se_exp,
+  se_out,
+  loss.function = c("huber", "tukey"),
+  k = switch(loss.function[1], huber = 1.345, tukey = 4.685),
+  diagnostics = FALSE
+)
 
-mr.raps.overdispersed.robust(b_exp, b_out, se_exp, se_out,
-  loss.function = c("huber", "tukey"), k = switch(loss.function[1], huber =
-  1.345, tukey = 4.685), initialization = c("l2", "mode"),
-  suppress.warning = FALSE, diagnostics = FALSE, pruning = TRUE,
-  niter = 20, tol = .Machine$double.eps^0.5)
+mr.raps.overdispersed.robust(
+  b_exp,
+  b_out,
+  se_exp,
+  se_out,
+  loss.function = c("huber", "tukey"),
+  k = switch(loss.function[1], huber = 1.345, tukey = 4.685),
+  initialization = c("l2", "mode"),
+  suppress.warning = FALSE,
+  diagnostics = FALSE,
+  pruning = TRUE,
+  niter = 20,
+  tol = .Machine$double.eps^0.5
+)
 }
 \arguments{
 \item{b_exp}{A vector of SNP effects on the exposure variable, usually obtained from a GWAS.}

@@ -4,7 +4,9 @@
 \name{bmi.ais}
 \alias{bmi.ais}
 \title{Effect of Body Mass Index (BMI) on Acute Ischemic Stroke (AIS)}
-\format{A \code{data.frame} with 1880 rows and 29 variables.}
+\format{
+A \code{data.frame} with 1880 rows and 29 variables.
+}
 \usage{
 data(bmi.ais)
 }

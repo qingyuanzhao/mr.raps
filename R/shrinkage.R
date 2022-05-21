@@ -128,31 +128,27 @@ fit.mixture.model <- function(z, n = 2, ntry = 20, force.mu.zero = TRUE, diagnos
 #' @export
 #'
 posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
-    if (length(z) > 1) {
-        if (length(sigma) == 1) {
-            sigma <- rep(sigma, length(z))
-        }
-        stopifnot(length(z) == length(sigma))
-        return(sapply(1:length(z), function(k)
-            posterior.mean(z[k], sigma[k], p, mu, sigma.prior, deriv)))
-    }
-    if (length(p) == 1){
+
+    if (length(p) == 1) {
         p <- c(p, 1 - p)
+    }
+    if (length(sigma) == 1) {
+        sigma <- rep(sigma, length(z))
     }
     stopifnot(length(p) == length(mu) && length(p) == length(sigma.prior))
     stopifnot(deriv %in% c(0, 1))
 
-    mu.tilde <- (z/sigma^2 + mu/sigma.prior^2) / (1/sigma^2 + 1/sigma.prior^2)
-    ## sigma.tilde <- sqrt(1/(1/sigma^2 + 1/sigma.prior^2)) ## not needed
-    p.tilde <- p * dnorm(z, mu, sqrt(sigma^2 + sigma.prior^2))
+    mu.tilde <- outer(mu/sigma.prior^2, z/sigma^2, "+") / outer(1/sigma.prior^2, 1/sigma^2, "+")
+    p.tilde <- dnorm(outer(mu, z, "-"), sd = sqrt(outer(sigma.prior^2, sigma^2, "+"))) * p
 
     if (deriv == 0) {
-        return(sum(p.tilde * mu.tilde) / sum(p.tilde))
+        return(colSums(p.tilde * mu.tilde) / colSums(p.tilde))
     } else {
-        diff.mu.tilde <- (1/sigma^2) / (1/sigma^2 + 1/sigma.prior^2)
-        diff.p.tilde <- - p * dnorm(z, mu, sqrt(sigma^2 + sigma.prior^2)) * (z - mu) / (sigma^2 + sigma.prior^2)
-        return(sum(diff.p.tilde * mu.tilde + p.tilde * diff.mu.tilde) / sum(p.tilde) - sum(p.tilde * mu.tilde) * sum(diff.p.tilde) / sum(p.tilde)^2)
+        diff.mu.tilde <- 1 / (1 + 1 / outer(sigma.prior^2, sigma^2, "/"))
+        diff.p.tilde <- p.tilde * outer(mu, z, "-") / outer(sigma.prior^2, sigma^2, "+")
+        return(colSums(diff.p.tilde * mu.tilde + p.tilde * diff.mu.tilde) / colSums(p.tilde) - colSums(p.tilde * mu.tilde) * colSums(diff.p.tilde) / colSums(p.tilde)^2)
     }
+
 }
 
 #' Main function for RAPS (shrinkage weights)
@@ -160,17 +156,21 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #' @inheritParams mr.raps.mle
 #' @param shrinkage If shrinkage (empirical partially Bayes) should be used. Shrinkage does not affect the unbiasedness of the estimating equations and generally will increase the estimation accuracy. If TRUE, \code{prior.param} must be provided.
 #' @param prior.param Parameters of the Gaussian spike-and-slab prior
+#' @param variability.method When using the sandwich standard error, whether the variability should be estimated by the empirical variance of the score.
+#' @param position (Pseudo-)Position of the instruments on the genome.
 #' @param num.init Number of initializations.
 #' @param multiple.root.warning How to handle multiple roots of the estimating equations? When this happens, the results of \code{mr.raps.shrinkage} are less reliable. This parameter can take three values: 0---nothing will be done; 1---a warning is given; 2---an error is given. Default is 1.
 #'
 #' @details
-#' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle}. See Efron and Hinkley (1978) referenced below.
+#' \code{mr.raps.shrinkage} is the main function for RAPS in conjunction with empirical partially Bayes. It is more general than the first generation \code{mr.raps.mle} function and should be preferred in practice. With the option \code{shrinkage = TRUE}, it essentially reduces to \code{mr.raps.mle}. In that case, the main difference is that the standard errors in \code{mr.raps.shrinkage} are computed based on observed information (and also an empirical estimate of the variance of the score function). This is preferred over using the plugged-in Fisher information in \code{mr.raps.mle} (Efron and Hinkley, 1978). When using the sandwich formula to obtain the standard error, the variance matrix of the score can be estimated using the theoretical formula if the instruments are independent. When the insturments are not independent, the variability matrix is obtained using the Newey-West estimator or window subsampling (Lumley and Heagerty, 1999).
 #'
 #' Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.mle} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization. When the program does not find a finite solution, consider increasing the value of \code{num.init}.
 #'
 #' @references
-#' Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2018). A genome-wide design and an empirical partially Bayes approach to increase the power of Mendelian randomization, with application to the effect of blood lipids on cardiovascular disease. <arXiv:1804.07371>.
+#' Qingyuan Zhao, Q., Chen, Y., Wang, J., and Small, D. S. (2019). Powerful three-sample genome-wide design and robust statistical inference in summary-data Mendelian randomization. International Journal of Epidemiology, 48(5), 1478--1492.
 #' Efron, B. and Hinkley, D. V. (1978). Assessing the accuracy of the maximum likelihood estimator: Observed versus expected Fisher information. Biometrika, 65(3), 457--483.
+#' Whitney K. Newey and Kenneth D. West. (1987). A Simple, Positive Semi-Definite, Heteroskedasticity and Autocorrelation Consistent Covariance Matrix. Econometrica, 55(3), 703--708.
+#' Thomas Lumley and Patrick Heagerty (1999). Weighted Empirical Adaptive Variance Estimators for Correlated Data Regression. : Journal of the Royal Statistical Society (Series B, Statistical Methodology), 61(2), 459--477.
 #'
 #' @examples
 #'
@@ -195,10 +195,17 @@ posterior.mean <- function(z, sigma, p, mu, sigma.prior, deriv = 0) {
 #'
 #' @importFrom rootSolve multiroot
 #'
-mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), num.init = 10, multiple.root.warning = 1) {
+mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FALSE, loss.function = c("l2", "huber", "tukey"), k = switch(loss.function[1], l2 = 2, huber = 1.345, tukey = 4.685), shrinkage = FALSE, prior.param = NULL, diagnostics = FALSE, se.method = c("sandwich", "bootstrap"), variability.method = c("theoretical", "window-subsampling", "Newey-West"), position = NULL, bandwidth = 10^6, num.init = 10, multiple.root.warning = 1) {
 
-    if (sum(b_exp^2 / se_exp^2) < length(b_exp) - sqrt(length(b_exp))) {
+    var_exp <- se_exp^2
+    var_out <- se_out^2
+
+    if (sum(b_exp^2 / var_exp) < length(b_exp) - sqrt(length(b_exp))) {
         message("WARNING: The average F-statistic is very small and the causal effect may be non-identified.")
+    }
+
+    if (shrinkage & is.null(prior.param)) {
+        prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
     }
 
     se.method <- match.arg(se.method)
@@ -233,18 +240,20 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     c2 <- integrate(function(x) x^2 * rho(x, deriv = 1)^2 * dnorm(x), -Inf, Inf)$value - delta^2
     c3 <- integrate(function(x) x^2 * rho(x, deriv = 2) * dnorm(x), -Inf, Inf)$value
 
+    variability.method <- match.arg(variability.method)
+
     get.t <- function(beta, tau2) {
-        (b_out - b_exp * beta) / sqrt(tau2 + se_out^2 + se_exp^2 * beta^2)
+        (b_out - b_exp * beta) / sqrt(tau2 + var_out + var_exp * beta^2)
     }
 
     get.gamma.hat <- function(beta, tau2, deriv = c("0", "beta", "tau2")) {
         deriv <- match.arg(deriv, c("0", "beta", "tau2"))
-        gamma.mle <- (b_exp/ se_exp^2 + beta * b_out/ (se_out^2 + tau2)) / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+        gamma.mle <- (b_exp/ var_exp + beta * b_out/ (var_out + tau2)) / (1 / var_exp + beta^2 / (var_out + tau2))
         gamma.mle[se_exp == 0] <- b_exp
         if (deriv == "0") {
             if (shrinkage) {
                 a <- posterior.mean(gamma.mle / se_exp,
-                                    sqrt(1 / (1 + beta^2 * se_exp^2 / (se_out^2 + tau2))),
+                                    sqrt(1 / (1 + beta^2 * var_exp / (var_out + tau2))),
                                     prior.param$p, prior.param$mu, prior.param$sigma)
                 gamma.hat <- a * se_exp
             } else {
@@ -254,14 +263,14 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         }
 
         if (deriv == "beta") {
-            gamma.mle.deriv <- (b_out/ (se_out^2 + tau2)) / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+            gamma.mle.deriv <- (b_out/ (var_out + tau2)) / (1 / var_exp + beta^2 / (var_out + tau2))
         } else { ## deriv == "tau2"
-            gamma.mle.deriv <- - beta * b_out / (se_out^2 + tau2)^2 / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+            gamma.mle.deriv <- - beta * b_out / (var_out + tau2)^2 / (1 / var_exp + beta^2 / (var_out + tau2))
         }
         if (shrinkage) {
             shrinkage.deriv <- posterior.mean(
                 gamma.mle / se_exp,
-                sqrt(1 / (1 + beta^2 * se_exp^2 / (se_out^2 + tau2))),
+                sqrt(1 / (1 + beta^2 * var_exp / (var_out + tau2))),
                 prior.param$p, prior.param$mu, prior.param$sigma,
                 deriv = 1)
             return(gamma.mle.deriv * shrinkage.deriv)
@@ -270,7 +279,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         }
     }
 
-    psi <- function(param) {
+    psi <- function(param, individual = FALSE) {
         if (!over.dispersion) {
             beta <- param[1]
             tau2 <- 0
@@ -280,19 +289,51 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         }
         t <- get.t(beta, tau2)
         gamma.hat <- get.gamma.hat(beta, tau2)
-        v <- beta^2 * se_exp^2 + se_out^2 + tau2
-        psi1 <- sum(gamma.hat * rho(t, deriv = 1) / sqrt(v))
+        v <- beta^2 * var_exp + var_out + tau2
+        psi1 <- gamma.hat * rho(t, deriv = 1) / sqrt(v)
+        if (!individual) {
+            psi1 <- sum(psi1)
+        }
         if (over.dispersion) {
-            psi2 <- sum((t * rho(t, deriv = 1) - delta) / v)
-            return(c(psi1, psi2))
+            psi2 <- (t * rho(t, deriv = 1) - delta) / v
+            if (!individual) {
+                psi2 <- sum(psi2)
+            }
+            return(cbind(psi1, psi2))
         } else {
             return(psi1)
         }
     }
 
+    variability.weight <- function(pos) { ## Newey-West triangular kernel
+        pmax(1 - abs(outer(pos, pos, "-")) / bandwidth, 0)
+    }
+
+    get.v1 <- function(score, pos) {
+        if (is.vector(score)) {
+            score <- matrix(score, ncol = 1)
+        }
+        if (variability.method == "Newey-West") {
+            W <- variability.weight(pos)
+            V1 <- t(score) %*% W %*% score
+        } else if (variability.method == "window-subsampling") {
+            B <- min(10000, length(pos))
+            s <- sample(pos, B)
+            d <- ifelse(over.dispersion, 2, 1)
+            V1 <- matrix(0, d, d)
+            for (i in 1:B) {
+                subsample <- (pos >= s[i] - bandwidth) & (pos <= s[i] + bandwidth)
+                score.subsample <- colSums(score[subsample, , drop = FALSE])
+                V1 <- V1 + score.subsample %*% t(score.subsample) / sum(subsample)
+            }
+            V1 <- V1 / B * length(pos)
+        }
+        V1
+    }
+
     if (!over.dispersion) {
-        res1 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "l2")
-        res2 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "huber")
+        res1 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "l2", suppress.warning = TRUE)
+        res2 <- mr.raps.mle(b_exp, b_out, se_exp, se_out, loss.function = "huber", suppress.warning = TRUE)
         init.param <- c(res1$beta.hat, res2$beta.hat)
         init.param.perturbed <-
             init.param[rep(c(1,2), each = num.init - 1)] +
@@ -329,13 +370,12 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         }
     }
 
-    beta.init <- mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function)$beta.hat
+    ## beta.init <- mr.raps.mle(b_exp, b_out, se_exp, se_out, over.dispersion, loss.function, suppress.warning = TRUE)$beta.hat
+    beta.init <- res2$beta.hat
     j <- which.min(abs(beta - beta.init[1]))
     if (length(j) == 0) {
         warning("Cannot find solution with finite over.dispersion. Using tau2 = 0.")
-        return(mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnostics))
-        ## res <- multiroot(function(beta) psi(c(beta, 0))[1], init.param[1])
-        ## estimated.param <- c(res$root, 0)
+        return(mr.raps.shrinkage(b_exp, b_out, se_exp, se_out, FALSE, loss.function, k, shrinkage, prior.param, diagnostics, se.method, variability.method, position, bandwidth, num.init, multiple.root.warning))
     }
 
     if (multiple.root.warning > 0) {
@@ -367,8 +407,17 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         tau2 <- 0
         t <- get.t(beta, tau2)
         gamma.hat <- get.gamma.hat(beta, tau2)
-        v <- beta^2 * se_exp^2 + se_out^2 + tau2
-        V1 <- c1 * sum(gamma.hat^2 / v)
+        v <- beta^2 * var_exp + var_out + tau2
+        if (variability.method == "theoretical") {
+            V1 <- c1 * sum(gamma.hat^2 / v)
+        } else {
+            score <- psi(estimated.param, individual = TRUE)
+            if (is.null(position)) {
+                V1 <- sum(score^2)
+            } else {
+                V1 <- get.v1(score, position)
+            }
+        }
         V2 <- sum((get.gamma.hat(beta, tau2, deriv = "beta") * rho(t, deriv = 1) + gamma.hat * delta * (- b_exp) / sqrt(v)) / sqrt(v))
         beta.se <- sqrt(V1 / V2^2)
         tau2.se <- 0
@@ -377,9 +426,18 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         tau2 <- estimated.param[2]
         t <- get.t(beta, tau2)
         gamma.hat <- get.gamma.hat(beta, tau2)
-        v <- beta^2 * se_exp^2 + se_out^2 + tau2
+        v <- beta^2 * var_exp + var_out + tau2
 
-        V1 <- diag(c(c1 * sum(gamma.hat^2 / v), c2 * sum(1 / v^2)))
+        if (variability.method == "theoretical") {
+            V1 <- diag(c(c1 * sum(gamma.hat^2 / v), c2 * sum(1 / v^2)))
+        } else {
+            score <- psi(estimated.param, individual = TRUE)
+            if (is.null(position)) {
+                V1 <- t(score) %*% score
+            } else {
+                V1 <- get.v1(score, position)
+            }
+        }
         V2 <- matrix(c(sum((get.gamma.hat(beta, tau2, deriv = "beta") * rho(t, deriv = 1) + gamma.hat * delta * (- b_exp) / sqrt(v)) / sqrt(v)),
                        0,
                        sum(get.gamma.hat(beta, tau2, "tau2") * rho(t, deriv = 1) / sqrt(v)),
@@ -394,7 +452,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
     ## qqnorm(t)
     ## abline(0, 1)
     gamma.hat <- get.gamma.hat(beta, tau2)
-    v <- 1 / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2))
+    v <- 1 / (1 / var_exp + beta^2 / (var_out + tau2))
     gamma.hat.z <- gamma.hat / sqrt(v)
     t <- t * sign(gamma.hat.z)
     gamma.hat.z <- abs(gamma.hat.z)
@@ -406,7 +464,7 @@ mr.raps.shrinkage <- function(b_exp, b_out, se_exp, se_out, over.dispersion = FA
         ## Heterogeneity test
 
         ## Use MLE instead of shrinked gamma.hat usually has more power
-        gamma.mle <- abs((b_exp/ se_exp^2 + beta * b_out/ (se_out^2 + tau2)) / (1 / se_exp^2 + beta^2 / (se_out^2 + tau2)))
+        gamma.mle <- abs((b_exp/ var_exp + beta * b_out/ (var_out + tau2)) / (1 / var_exp + beta^2 / (var_out + tau2)))
         gamma.mle[se_exp == 0] <- abs(b_exp)
 
         weights <- gamma.mle
@@ -484,8 +542,8 @@ plot.mr.raps <- function(x, ...) {
 #' }
 #'
 mr.raps <- function(data, diagnostics = TRUE, over.dispersion = TRUE, loss.function = "huber", ...) {
-    prior.param <- fit.mixture.model(data$beta.exposure / data$se.exposure)
-    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, over.dispersion, loss.function, prior.param = prior.param, diagnostics = diagnostics, ...)
+
+    out <- mr.raps.shrinkage(data$beta.exposure, data$beta.outcome, data$se.exposure, data$se.outcome, over.dispersion, loss.function, diagnostics = diagnostics, ...)
 
     if (diagnostics) {
         cat(paste0("Estimated causal effect: ", signif(out$beta.hat, 3), ", standard error: ", signif(out$beta.se, 3), ", p-value: ", signif(pnorm(-abs(out$beta.hat / out$beta.se)) * 2, 3), ".\n"))

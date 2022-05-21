@@ -4,8 +4,13 @@
 \alias{mr.raps}
 \title{Recommended \code{mr.raps} procedure}
 \usage{
-mr.raps(data, diagnostics = TRUE, over.dispersion = TRUE,
-  loss.function = "huber", ...)
+mr.raps(
+  data,
+  diagnostics = TRUE,
+  over.dispersion = TRUE,
+  loss.function = "huber",
+  ...
+)
 }
 \arguments{
 \item{data}{A data frame (see Details)}
