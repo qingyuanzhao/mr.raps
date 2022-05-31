@@ -4,7 +4,9 @@
 \name{lipid.cad}
 \alias{lipid.cad}
 \title{Effect of blood lipids (LDL cholesterol, HDL cholesterol, Triglycerides) on Cardiovascular disease risk}
-\format{A \code{data.frame} with 12026 rows and 24 variables.}
+\format{
+A \code{data.frame} with 12026 rows and 24 variables.
+}
 \usage{
 data(lipid.cad)
 }

@@ -4,7 +4,11 @@
 \alias{mr.raps.publish}
 \title{Generate diagnostic plots for publishing}
 \usage{
-mr.raps.publish(data, weight.option = c("both", "MLE", "shrinkage"))
+mr.raps.publish(
+  data,
+  weight.option = c("both", "MLE", "shrinkage"),
+  verbal = 1
+)
 }
 \description{
 Generate diagnostic plots for publishing

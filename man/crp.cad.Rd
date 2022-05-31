@@ -4,7 +4,9 @@
 \name{crp.cad}
 \alias{crp.cad}
 \title{Effect of C-Reactive Protein on Coronary Artery Disease (CAD)}
-\format{A \code{data.frame} with 1575 rows and 30 variables.}
+\format{
+A \code{data.frame} with 1575 rows and 30 variables.
+}
 \usage{
 data(crp.cad)
 }

@@ -4,8 +4,13 @@
 \alias{fit.mixture.model}
 \title{Fit a Gaussian mixture deconvolution model}
 \usage{
-fit.mixture.model(z, n = 2, ntry = 10, force.mu.zero = TRUE,
-  diagnostics = FALSE)
+fit.mixture.model(
+  z,
+  n = 2,
+  ntry = 20,
+  force.mu.zero = TRUE,
+  diagnostics = FALSE
+)
 }
 \arguments{
 \item{z}{A vector of z-scores.}

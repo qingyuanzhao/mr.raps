@@ -4,7 +4,9 @@
 \name{bmi.cad}
 \alias{bmi.cad}
 \title{Effect of Body Mass Index (BMI) on Coronary Artery Disease (CAD)}
-\format{A \code{data.frame} with 1119 rows and 42 variables.}
+\format{
+A \code{data.frame} with 1119 rows and 42 variables.
+}
 \usage{
 data(bmi.cad)
 }

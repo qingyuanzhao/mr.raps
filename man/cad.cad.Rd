@@ -4,7 +4,9 @@
 \name{cad.cad}
 \alias{cad.cad}
 \title{Effect of Coronary Artery Disease (BMI) on Coronary Artery Disease (CAD)}
-\format{A \code{data.frame} with 1650 rows and 39 variables.}
+\format{
+A \code{data.frame} with 1650 rows and 39 variables.
+}
 \usage{
 data(cad.cad)
 }
