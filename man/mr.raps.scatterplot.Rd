@@ -26,19 +26,21 @@ mr.raps.scatterplot(
 \item{num.snps}{How many SNPs are shown?}
 
 \item{fit}{A \code{mr.raps} fit.}
+
+\item{alpha}{Alpha transparency value passed to \code{\link[ggplot2]{geom_errorbarh}}. Default 0.8.}
 }
 \description{
 Scatter plot with annotation
 }
 \examples{
-data(bmi.sbp)
-mr.raps.scatterplot(bmi.sbp)
+# data(bmi.sbp)
+# mr.raps.scatterplot(bmi.sbp)
 
 \donttest{
-require(bumphunter)
-require(TxDb.Hsapiens.UCSC.hg38.knownGene)
-genes <- annotateTranscripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
-mr.raps.scatterplot(bmi.sbp, annotate.genes = genes)
+# require(bumphunter)
+# require(TxDb.Hsapiens.UCSC.hg38.knownGene)
+# genes <- annotateTranscripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
+# mr.raps.scatterplot(bmi.sbp, annotate.genes = genes)
 }
 
 }

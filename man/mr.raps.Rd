@@ -36,11 +36,10 @@ This function calls \code{mr.raps.shrinkage} with \code{overdispersion = TRUE}, 
 }
 }
 \examples{
-
+# Example 1
 mr.raps(bmi.sbp)
-
 \donttest{
-require(mr.raps)
+# Example 2
 data(lipid.cad)
 data <- subset(lipid.cad, lipid == "hdl" & restrict &
 gwas.selection == "teslovich_2010" &

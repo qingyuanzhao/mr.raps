@@ -129,17 +129,17 @@ Main function for RAPS (MLE weights)
 }
 \section{Functions}{
 \itemize{
-\item \code{mr.raps.mle.all}: 
+\item \code{mr.raps.mle.all()}: 
 
-\item \code{mr.raps.simple}: 
+\item \code{mr.raps.simple()}: 
 
-\item \code{mr.raps.overdispersed}: 
+\item \code{mr.raps.overdispersed()}: 
 
-\item \code{mr.raps.simple.robust}: 
+\item \code{mr.raps.simple.robust()}: 
 
-\item \code{mr.raps.overdispersed.robust}: 
+\item \code{mr.raps.overdispersed.robust()}: 
+
 }}
-
 \examples{
 
 data(bmi.sbp)
