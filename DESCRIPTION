@@ -30,6 +30,8 @@ Imports:
     rsnps,
     splines,
     stats
+Suggests:
+    bumphunter,
 Remotes:
     ropensci/rsnps
 Encoding: UTF-8

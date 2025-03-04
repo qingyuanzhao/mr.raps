@@ -52,6 +52,9 @@ mr.raps.scatterplot <- function(data, annotate = TRUE, annotate.genes = NULL, ra
         info <- info[rowSums(is.na(snps)) == 0, ]
         snps <- snps[rowSums(is.na(snps)) == 0, ]
         if (!is.null(annotate.genes)) {
+            if (!requireNamespace("bumphunter", quietly = TRUE)) {
+              stop("Please install bumphunter from BioConductor.")
+            }
             tab <- bumphunter::matchGenes(snps, annotate.genes)
             info <- cbind(info, tab)
         }
