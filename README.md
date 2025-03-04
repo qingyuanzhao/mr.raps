@@ -3,7 +3,7 @@
 ## Setup
 *mr.raps* is an R package for two-sample summary-data Mendelian randomization using the robust adjusted profile score (MR-RAPS). To install the most up-to-date version, run the following command in R
 
-```
+```r
 library(devtools)
 install_github("qingyuanzhao/mr.raps")
 ```
@@ -13,7 +13,7 @@ The [CRAN version of this package](https://cran.r-project.org/web/packages/mr.ra
 ## Examples
 The main function is *mr.raps*. You can find examples by running
 
-```
+```r
 library(mr.raps)
 example(mr.raps) ## Recommended procedure
 example(mr.raps.shrinkage) ## General function for empirical partially Bayes estimator
