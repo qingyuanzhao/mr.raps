@@ -17,5 +17,5 @@ Imports:
 Depends:
     R (>= 2.10)
 License: GPL-3
-RoxygenNote: 7.1.2
+RoxygenNote: 7.3.2
 LazyData: true
