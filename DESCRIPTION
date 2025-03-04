@@ -1,4 +1,3 @@
-Type: Package
 Package: mr.raps
 Title: Two Sample Mendelian Randomization using Robust Adjusted Profile
     Score
