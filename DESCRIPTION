@@ -1,7 +1,7 @@
 Package: mr.raps
 Title: Two Sample Mendelian Randomization using Robust Adjusted Profile
     Score
-Version: 0.4.1
+Version: 0.4.2
 Authors@R: c(
     person("Qingyuan", "Zhao", , "qingyzhao@gmail.com", role = c("aut", "cre")),
     person("Jingshu", "Wang", , "wangjingshususan@gmail.com", role = "aut")
