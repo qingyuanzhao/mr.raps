@@ -11,14 +11,14 @@
 #' @import ggplot2 ggrepel
 #'
 #' @examples
-#' data(bmi.sbp)
-#' mr.raps.scatterplot(bmi.sbp)
+#' # data(bmi.sbp)
+#' # mr.raps.scatterplot(bmi.sbp)
 #'
 #' \donttest{
-#' require(bumphunter)
-#' require(TxDb.Hsapiens.UCSC.hg38.knownGene)
-#' genes <- annotateTranscripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
-#' mr.raps.scatterplot(bmi.sbp, annotate.genes = genes)
+#' # require(bumphunter)
+#' # require(TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' # genes <- annotateTranscripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' # mr.raps.scatterplot(bmi.sbp, annotate.genes = genes)
 #' }
 #'
 #' @export
