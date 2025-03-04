@@ -6,7 +6,7 @@
 #' @param rank.method How to select strongest SNPs for plot?
 #' @param num.snps How many SNPs are shown?
 #' @param fit A \code{mr.raps} fit.
-#'
+#' @param alpha Alpha transparency value passed to \code{\link[ggplot2]{geom_errorbarh}}. Default 0.8.
 #' @import rsnps
 #' @import ggplot2 ggrepel
 #'
