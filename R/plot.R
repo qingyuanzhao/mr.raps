@@ -6,19 +6,19 @@
 #' @param rank.method How to select strongest SNPs for plot?
 #' @param num.snps How many SNPs are shown?
 #' @param fit A \code{mr.raps} fit.
-#'
+#' @param alpha Alpha transparency value passed to \code{\link[ggplot2]{geom_errorbarh}}. Default 0.8.
 #' @import rsnps
 #' @import ggplot2 ggrepel
 #'
 #' @examples
-#' data(bmi.sbp)
-#' mr.raps.scatterplot(bmi.sbp)
+#' # data(bmi.sbp)
+#' # mr.raps.scatterplot(bmi.sbp)
 #'
 #' \donttest{
-#' require(bumphunter)
-#' require(TxDb.Hsapiens.UCSC.hg38.knownGene)
-#' genes <- annotateTranscripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
-#' mr.raps.scatterplot(bmi.sbp, annotate.genes = genes)
+#' # require(bumphunter)
+#' # require(TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' # genes <- annotateTranscripts(TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' # mr.raps.scatterplot(bmi.sbp, annotate.genes = genes)
 #' }
 #'
 #' @export
@@ -52,6 +52,9 @@ mr.raps.scatterplot <- function(data, annotate = TRUE, annotate.genes = NULL, ra
         info <- info[rowSums(is.na(snps)) == 0, ]
         snps <- snps[rowSums(is.na(snps)) == 0, ]
         if (!is.null(annotate.genes)) {
+            if (!requireNamespace("bumphunter", quietly = TRUE)) {
+              stop("Please install bumphunter from BioConductor.")
+            }
             tab <- bumphunter::matchGenes(snps, annotate.genes)
             info <- cbind(info, tab)
         }

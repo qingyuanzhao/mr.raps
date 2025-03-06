@@ -16,9 +16,19 @@ modal.plot(
 )
 }
 \arguments{
+\item{b_exp}{A vector of SNP effects on the exposure variable, usually obtained from a GWAS.}
+
+\item{b_out}{A vector of SNP effects on the outcome variable, usually obtained from a GWAS.}
+
+\item{se_exp}{A vector of standard errors of \code{b_exp}.}
+
+\item{se_out}{A vector of standard errors of \code{b_out}.}
+
 \item{data}{Alternatively, dataset can be passed by the argument \code{data}, which must be a data frame with columns \code{beta.exposure}, \code{beta.outcome}, \code{se.exposure}, \code{se.outcome}.}
 
 \item{k}{Locality of the robust likelihood (smaller \code{k} has more sensitivity for mode detection)}
+
+\item{weight.option}{Character. Choice of \code{"MLE"} or \code{"shrinkage"}.}
 
 \item{beta.range}{range of beta in the plot}
 }

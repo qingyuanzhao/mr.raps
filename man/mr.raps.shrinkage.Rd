@@ -65,13 +65,13 @@ Main function for RAPS (shrinkage weights)
 
 Because the estimating equations are highly non-linear, it is possible that there are multiple roots. To overcome this issue, we use multiple initializations (controlled by \code{num.init}) around the \code{mr.raps.mle} point estimate. A warning is given if there seems to be another finite root, and no solution is returned if there are two roots close to the initialization. When the program does not find a finite solution, consider increasing the value of \code{num.init}.
 }
-\section{Methods (by generic)}{
+\section{Functions}{
 \itemize{
-\item \code{print}: Print
+\item \code{print(mr.raps)}: Print
 
-\item \code{plot}: Diagnostic plots
+\item \code{plot(mr.raps)}: Diagnostic plots
+
 }}
-
 \examples{
 
 require(mr.raps)
